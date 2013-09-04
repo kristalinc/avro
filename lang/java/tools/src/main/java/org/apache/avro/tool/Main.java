@@ -37,6 +37,7 @@ public class Main {
     for (Tool tool : new Tool[] {
         new CatTool(),
         new SpecificCompilerTool(),
+        new CloverSDKTool(),
         new InduceSchemaTool(),
         new JsonToBinaryFragmentTool(),
         new BinaryFragmentToJsonTool(),

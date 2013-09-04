@@ -98,12 +98,33 @@ public class TestSpecificCompilerTool {
   }
 
   @Test
+  public void testCompileSchemaTwoFilesDifferentOrder() throws Exception {
+
+    doCompile(new String[]{"schema",
+            TEST_INPUT_DIR.toString() + "/player.avsc",
+            TEST_INPUT_DIR.toString() + "/position.avsc",
+            TEST_OUTPUT_DIR.getPath()});
+    assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
+    assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
+  }
+
+  @Test
   public void testCompileSchemaFileAndDirectory() throws Exception {
 
     doCompile(new String[]{"schema",
       TEST_INPUT_DIR.toString() + "/position.avsc",
       TEST_INPUT_DIR.toString(),
       TEST_OUTPUT_DIR.getPath()});
+    assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
+    assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
+  }
+
+  @Test
+  public void testCompileSchemaDirectory() throws Exception {
+
+    doCompile(new String[]{"schema",
+            TEST_INPUT_DIR.toString(),
+            TEST_OUTPUT_DIR.getPath()});
     assertFileMatch(TEST_EXPECTED_POSITION, TEST_OUTPUT_POSITION);
     assertFileMatch(TEST_EXPECTED_PLAYER,   TEST_OUTPUT_PLAYER);
   }

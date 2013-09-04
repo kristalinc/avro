@@ -17,3 +17,9 @@
 /.classpath
 /.eclipse
 /.project
+*.iml
+.idea/
+stderr
+stdout
+build/
+npm-debug.log
