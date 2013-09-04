@@ -129,6 +129,14 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
     // throw exception or return null?
     return null;
   }
+#elseif (${this.isRecord($field.schema())})
+  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    org.json.JSONObject jsonObj = getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});
+    if (jsonObj != null) {
+      return new ${this.javaType($field.schema())}(getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)}));
+    }
+    return null;
+  }
 #else
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});

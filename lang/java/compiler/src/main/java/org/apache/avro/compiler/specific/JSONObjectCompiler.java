@@ -178,6 +178,10 @@ public class JSONObjectCompiler extends SpecificCompiler {
   }
 
   // TODO: figure out what to do with maps
+  public boolean isRecord(Schema schema) {
+    return getBaseSchema(schema).getType() == Schema.Type.RECORD;
+  }
+
   public boolean isArray(Schema schema) {
     return getBaseSchema(schema).getType() == Schema.Type.ARRAY;
   }

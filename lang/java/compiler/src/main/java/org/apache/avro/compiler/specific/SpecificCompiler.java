@@ -215,8 +215,9 @@ public class SpecificCompiler {
      */
     File writeToDestination(File src, File destDir) throws IOException {
       File f = new File(destDir, path);
-      if (src != null && f.exists() && f.lastModified() >= src.lastModified())
-        return f;                                 // already up to date: ignore
+      // DDM: Always generate the file even if it already exists
+//      if (src != null && f.exists() && f.lastModified() >= src.lastModified())
+//        return f;                                 // already up to date: ignore
       f.getParentFile().mkdirs();
       FileWriter fw = new FileWriter(f);
       try {
