@@ -28,7 +28,7 @@
 
   <groupId>org.apache.avro</groupId>
   <artifactId>trevni-doc</artifactId>
-  <version>1.7.5</version>
+  <version>1.7.5-cloversdk-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Trevni Specification</name>
