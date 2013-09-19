@@ -1,0 +1,102 @@
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+
+## Modifications by Duane Moore, Clover, Aug 2013
+
+#if ($schema.getNamespace())
+package com.clover.server.$schema.getNamespace();
+#end
+
+#if ($schema.getDoc())
+/** $schema.getDoc() */
+#end
+
+public class ${this.mangle($schema.getName())} extends com.clover.core.$schema.getNamespace().${this.mangle($schema.getName())} {
+
+#foreach ($field in $schema.getFields())
+    #if($field.getProp("hide_from_client"))
+        #foreach ($annotation in $this.javaAnnotations($field)) @$annotation #end
+        #if ($field.getProp("sql_name"))
+        @com.clover.data.Column(name = "$field.getProp("sql_name")" #if($field.getProp("sql_table")), remote=true, remoteTableName="$field.getProp("sql_table")"#end)
+        #end
+    private ${this.javaUnbox($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+        #if ($this.renamedFrom($field))
+
+        @Deprecated
+        private ${this.javaUnbox($field.schema())} ${this.mangle($this.renamedFrom($field), $schema.isError())};
+        #end#end
+
+#end
+
+#if ($schema.getFields().size() > 0)
+
+public ${this.mangle($schema.getName())}() {}
+
+public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
+    #foreach ($field in $schema.getFields())
+    this.${this.mangle($field.name())} = ${this.mangle($field.name())};
+        #if ($this.renamedFrom($field))
+        this.${this.mangle($this.renamedFrom($field))} = ${this.mangle($field.name())};
+        #end
+    #end
+}
+#end
+
+#foreach ($field in $schema.getFields())
+    #if($field.getProp("hide_from_client"))
+        #if ($field.doc())
+        /**
+        * $field.doc()
+        **/
+        #end
+    public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    return ${this.mangle($field.name(), $schema.isError())};
+    }
+
+        #if ($this.renamedFrom($field))
+        @Deprecated
+        public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $this.renamedFrom($field))}() {
+        return ${this.mangle($this.renamedFrom($field), $schema.isError())};
+        }
+        #end
+        #if (${this.isCreateSetters()})
+        public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
+            ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+        this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
+            #if($this.renamedFrom($field))    this.${this.mangle($this.renamedFrom($field), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
+            #end
+        }
+
+            #if ($this.renamedFrom($field))
+            @Deprecated
+            public void ${this.generateSetMethod($schema, $this.renamedFrom($field))}(${this.javaType($field.schema())} ${this.mangle($this.renamedFrom($field), $schema.isError())}) {
+                ${this.generateValidityCheck($field, ${this.mangle($this.renamedFrom($field), $schema.isError())})}
+            this.${this.mangle($this.renamedFrom($field), $schema.isError())} = ${this.mangle($this.renamedFrom($field), $schema.isError())};
+            this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($this.renamedFrom($field), $schema.isError())};
+            }
+            #end
+        #end
+    #end
+#end
+
+public void validate() {
+#foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
+    #if($field.getProp("hide_from_client"))
+    if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
+    #end#end#end
+#foreach ($field in $schema.getFields())
+    #if($field.getProp("hide_from_client"))
+        ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+    #end
+#end
+}
+}
