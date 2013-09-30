@@ -1,0 +1,39 @@
+## "License"); you may not use this file except in compliance
+## with the License.  You may obtain a copy of the License at
+##
+##     http://www.apache.org/licenses/LICENSE-2.0
+##
+## Unless required by applicable law or agreed to in writing, software
+## distributed under the License is distributed on an "AS IS" BASIS,
+## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+## See the License for the specific language governing permissions and
+## limitations under the License.
+##
+
+## Modifications by Duane Moore, Clover, Aug 2013
+
+package com.clover.server.handlers.api.$this.getNamespace();
+
+#if ($message.getDoc())
+/** $message.getDoc() */
+#end
+
+@com.clover.server.RequirePermission(permissions = {}) //TODO support permissions
+public class $this.nameToUpper($message.getName())Handler
+        extends com.clover.server.http.UnifiedRequestHandler<${this.nameToUpper($message.getName())}Handler.RequestData> {
+    public static class RequestData extends com.clover.core.CoreBaseRequest {
+
+    }
+
+    public static class ResponseData {
+        public ${this.javaType($message.getResponse())}  $this.nameToLower($message.getResponse().getName());
+        public ResponseData(${this.javaType($message.getResponse())} $this.nameToLower($message.getResponse().getName())) {
+            this.$this.nameToLower($message.getResponse().getName()) = $this.nameToLower($message.getResponse().getName());
+        }
+    }
+
+    @Override
+    protected Object serve(com.clover.server.http.Request request, com.clover.server.TxContext context, $this.nameToUpper($message.getName())Handler#* *#.RequestData obj) {
+        return new ${this.nameToUpper($message.getName())}Handler.ResponseData();
+    }
+}

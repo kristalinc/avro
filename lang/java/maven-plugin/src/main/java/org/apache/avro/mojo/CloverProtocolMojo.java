@@ -19,6 +19,7 @@
 package org.apache.avro.mojo;
 
 import org.apache.avro.compiler.specific.JavaObjectCompiler;
+import org.apache.avro.compiler.specific.ServerObjectCompiler;
 import org.apache.avro.generic.GenericData;
 
 import java.io.File;
@@ -56,8 +57,15 @@ public class CloverProtocolMojo extends ProtocolMojo {
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
+
+    SpecificCompiler compiler = null;
+
+    if (!filename.endsWith(".avpr")) {
+      return;
+    }
+
     Protocol protocol = Protocol.parse(src);
-    SpecificCompiler compiler = new JavaObjectCompiler(protocol);
+    compiler = new JavaObjectCompiler(protocol);
 
 
     //CORE COMPILER
@@ -68,12 +76,8 @@ public class CloverProtocolMojo extends ProtocolMojo {
     compiler.compileToDestination(src, outputDirectory);
 
     //ServerCompiler
-//    compiler = new JavaObjectCompiler(protocol);
-//    compiler.setTemplateDir("/com/clover/avro/templates/java/server/");
-//    compiler.setStringType(GenericData.StringType.String);
-//    //compiler.setFieldVisibility(getFieldVisibility());
-//    compiler.setCreateSetters(createSetters);
-//    compiler.compileToDestination(src, new File(outputDirectory, "server"));
+    ServerObjectCompiler sCompiler = new ServerObjectCompiler(protocol);
+    sCompiler.compileToDestination(src, new File(outputDirectory, "server"));
   }
 
   @Override

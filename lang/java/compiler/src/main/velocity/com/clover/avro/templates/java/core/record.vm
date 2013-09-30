@@ -19,7 +19,7 @@
 ## Modifications by Duane Moore, Clover, Aug 2013
 
 #if ($schema.getNamespace())
-package $schema.getNamespace();
+package com.clover.core.data.$schema.getNamespace();
 #end
 
 #if ($schema.getDoc())
@@ -49,7 +49,11 @@ public class ${this.mangle($schema.getName())} {
 
 #if ($schema.getFields().size() > 0)
 
-  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) {
+  public ${this.mangle($schema.getName())}(
+#foreach($field in $schema.getFields())
+    @org.codehaus.jackson.annotate.JsonProperty("${this.mangle($field.name())}") ${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #else)#end
+
+#end {
 #foreach ($field in $schema.getFields())
     this.${this.mangle($field.name())} = ${this.mangle($field.name())};
 #if ($this.renamedFrom($field))
@@ -76,23 +80,6 @@ public class ${this.mangle($schema.getName())} {
     return ${this.mangle($this.renamedFrom($field), $schema.isError())};
   }
 #end
-##if (${this.isCreateSetters()})
-##  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
-##    ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
-##    this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
-####if($this.renamedFrom($field))    this.${this.mangle($this.renamedFrom($field), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
-####end
-##  }
-##
-####if ($this.renamedFrom($field))
-##  @Deprecated
-##  public void ${this.generateSetMethod($schema, $this.renamedFrom($field))}(${this.javaType($field.schema())} ${this.mangle($this.renamedFrom($field), $schema.isError())}) {
-##    ${this.generateValidityCheck($field, ${this.mangle($this.renamedFrom($field), $schema.isError())})}
-##    this.${this.mangle($this.renamedFrom($field), $schema.isError())} = ${this.mangle($this.renamedFrom($field), $schema.isError())};
-##    this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($this.renamedFrom($field), $schema.isError())};
-##  }
-##end
-##end
 #end
 #end
 
