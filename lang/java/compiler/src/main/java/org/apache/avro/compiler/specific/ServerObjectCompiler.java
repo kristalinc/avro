@@ -21,6 +21,7 @@ public class ServerObjectCompiler {
   private VelocityEngine velocityEngine;
 
   private String templateDir;
+  private String protocolPackage;
   private static String logChuteName = null;
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
 
@@ -38,13 +39,16 @@ public class ServerObjectCompiler {
   }
 
   ServerObjectCompiler() {
-    this.templateDir = "/com/clover/avro/templates/java/server/";
     initializeVelocity();
   }
 
   public ServerObjectCompiler(Protocol protocol) {
     this();
     this.protocol = protocol;
+  }
+
+  public void setTemplateDir(String templateDir) {
+    this.templateDir = templateDir;
   }
 
   /** Generate output under dst, unless existing file is newer than src. */

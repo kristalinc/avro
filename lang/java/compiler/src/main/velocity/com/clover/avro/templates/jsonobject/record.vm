@@ -88,6 +88,10 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
 #foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
     if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
 #end#end
+#foreach ($field in $schema.getFields())
+    ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+#end
+
     // TODO: also validate string length, valid ranges and other integrity checks
 }
 #end

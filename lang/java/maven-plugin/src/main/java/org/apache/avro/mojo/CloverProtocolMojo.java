@@ -28,13 +28,7 @@ import java.io.IOException;
 import org.apache.avro.Protocol;
 import org.apache.avro.compiler.specific.SpecificCompiler;
 
-/**
- * Generate Java classes and interfaces from Avro protocol files (.avpr)
- *
- * @goal clover-protocol
- * @phase generate-sources
- * @threadSafe
- */
+// USED FOR GENERATING SERVER PROTOCOL HANDLERS
 public class CloverProtocolMojo extends ProtocolMojo {
   /**
    * A set of Ant-like inclusion patterns used to select files from the source
@@ -68,7 +62,7 @@ public class CloverProtocolMojo extends ProtocolMojo {
     compiler = new JavaObjectCompiler(protocol);
 
 
-    //CORE COMPILER
+    // Data object compiler
     compiler.setTemplateDir("/com/clover/avro/templates/java/core/");
     compiler.setStringType(GenericData.StringType.String);
     //compiler.setFieldVisibility(getFieldVisibility());
@@ -77,6 +71,7 @@ public class CloverProtocolMojo extends ProtocolMojo {
 
     //ServerCompiler
     ServerObjectCompiler sCompiler = new ServerObjectCompiler(protocol);
+    sCompiler.setTemplateDir("/com/clover/avro/templates/java/server/");
     sCompiler.compileToDestination(src, new File(outputDirectory, "server"));
   }
 

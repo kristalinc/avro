@@ -7,13 +7,7 @@ import org.apache.avro.generic.GenericData;
 import java.io.File;
 import java.io.IOException;
 
-/**
- * Generate Java classes from Avro schema files (.avsc)
- *
- * @goal clover-server
- * @phase generate-sources
- * @threadSafe
- */
+// NOT USED FOR NOW
 public class CloverDatabaseMojo extends AbstractAvroMojo {
   /**
    * A parser used to parse all schema files. Using a common parser will
