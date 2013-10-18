@@ -19,7 +19,7 @@
 ## Modifications by Duane Moore, Clover, Aug 2013
 
 #if ($schema.getNamespace())
-package com.clover.core.data.$schema.getNamespace();
+package $schema.getNamespace();
 #end
 
 #if ($schema.getDoc())
@@ -28,7 +28,7 @@ package com.clover.core.data.$schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-@com.clover.core.data.DatabaseTable(tableName = "#if($schema.getProp("table_name"))$schema.getProp("table_name")#else$schema.getName()#end")
+##@com.clover.core.data.DatabaseTable(tableName = "#if($schema.getProp("table_name"))$schema.getProp("table_name")#else$schema.getName()#end")
 @SuppressWarnings("all")
 public class ${this.mangle($schema.getName())} {
 
@@ -36,7 +36,7 @@ public class ${this.mangle($schema.getName())} {
 #if(! $field.getProp("hide_from_client"))
 #foreach ($annotation in $this.javaAnnotations($field)) @$annotation #end
 #if (!$field.getProp("notSql"))
-  @com.clover.core.data.Column(name = "#if($field.getProp("sql_name"))$field.getProp("sql_name")#else${this.camelCaseToUnderscore($field.name())}#end" #if($field.getProp("sql_table")), remote=true, remoteTableName="$field.getProp("sql_table")"#end)
+##  @com.clover.core.data.Column(name = "#if($field.getProp("sql_name"))$field.getProp("sql_name")#else${this.camelCaseToUnderscore($field.name())}#end" #if($field.getProp("sql_table")), remote=true, remoteTableName="$field.getProp("sql_table")"#end)
 #end
   private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
 #if ($this.renamedFrom($field))

@@ -1,7 +1,7 @@
 package org.apache.avro.mojo;
 
 import org.apache.avro.Schema;
-import org.apache.avro.compiler.specific.SpecificCompiler;
+import org.apache.avro.compiler.specific.JavaObjectCompiler;
 import org.apache.avro.generic.GenericData;
 
 import java.io.File;
@@ -54,7 +54,7 @@ public class CloverSchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
-    SpecificCompiler compiler = new SpecificCompiler(schema);
+    JavaObjectCompiler compiler = new JavaObjectCompiler(schema);
     compiler.setTemplateDir("/com/clover/avro/templates/java/core/");
     //compiler.setTemplateDir(templateDirectory);
     //compiler.setStringType(GenericData.StringType.valueOf(stringType));
