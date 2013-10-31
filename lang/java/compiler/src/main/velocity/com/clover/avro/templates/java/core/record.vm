@@ -19,8 +19,9 @@
 ## Modifications by Duane Moore, Clover, Aug 2013
 
 #if ($schema.getNamespace())
-package $schema.getNamespace();
+package com.clover.server.data.$schema.getNamespace();
 #end
+
 
 #if ($schema.getDoc())
 /** $schema.getDoc() */
@@ -28,97 +29,95 @@ package $schema.getNamespace();
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-##@com.clover.core.data.DatabaseTable(tableName = "#if($schema.getProp("table_name"))$schema.getProp("table_name")#else$schema.getName()#end")
 @SuppressWarnings("all")
-public class ${this.mangle($schema.getName())} {
-
+public class ${this.mangle($schema.getName())} extends com.clover.message.Message {
+  private final java.lang.Long id;
 #foreach ($field in $schema.getFields())
-#if(! $field.getProp("hide_from_client"))
-#foreach ($annotation in $this.javaAnnotations($field)) @$annotation #end
-#if (!$field.getProp("notSql"))
-##  @com.clover.core.data.Column(name = "#if($field.getProp("sql_name"))$field.getProp("sql_name")#else${this.camelCaseToUnderscore($field.name())}#end" #if($field.getProp("sql_table")), remote=true, remoteTableName="$field.getProp("sql_table")"#end)
-#end
   private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
-#if ($this.renamedFrom($field))
-
-  @Deprecated
-  private final ${this.javaType($field.schema())} ${this.mangle($this.renamedFrom($field), $schema.isError())};
-#end#end
-
 #end
 
 #if ($schema.getFields().size() > 0)
 
   public ${this.mangle($schema.getName())}(
+        @com.fasterxml.jackson.annotation.JsonProperty("serverId")  java.lang.Long id,
 #foreach($field in $schema.getFields())
-    @org.codehaus.jackson.annotate.JsonProperty("${this.mangle($field.name())}") ${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #else)#end
+        @com.fasterxml.jackson.annotation.JsonProperty("$field.name()") ${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #else)#end
 
-#end {
+#end  {
+    this.id = id;
 #foreach ($field in $schema.getFields())
     this.${this.mangle($field.name())} = ${this.mangle($field.name())};
-#if ($this.renamedFrom($field))
-    this.${this.mangle($this.renamedFrom($field))} = ${this.mangle($field.name())};
 #end
-#end
-  }
+}
 #end
 
+  @com.fasterxml.jackson.annotation.JsonIgnore
+  public Long getId() {
+    return id;
+  }
+
 #foreach ($field in $schema.getFields())
-#if(!$field.getProp("hide_from_client"))
 #if ($field.doc())
   /**
-   * $field.doc()
-   **/
+  * $field.doc()
+  **/
 #end
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
   }
 
-#if ($this.renamedFrom($field))
-  @Deprecated
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $this.renamedFrom($field))}() {
-    return ${this.mangle($this.renamedFrom($field), $schema.isError())};
-  }
-#end
-#end
 #end
 
   public void validate() {
 #foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
-  #if(! $field.getProp("hide_from_client"))
-  if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
-#end#end#end
+    if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
+#end#end
 #foreach ($field in $schema.getFields())
-#if(! $field.getProp("hide_from_client") && $this.generateValidityCheck($field, "").length() > 10)
+#if($this.generateValidityCheck($field, "").length() > 10)
     ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
 #end
 #end
-}
+  }
 
 
-## Builder interface
-  public static class Builder {
+  public java.lang.String toString(com.clover.message.Encoder encoder) {
 #foreach ($field in $schema.getFields())
-#foreach ($annotation in $this.javaAnnotations($field)) @$annotation #end
+    encoder.write("$field.name()", ${this.mangle($field.name())});
+#end
+    return encoder.toString();
+  }
+
+
+## Builder
+  public static class Builder extends com.clover.message.Message.Builder<${this.mangle($schema.getName())}> {
+    java.lang.Long id;
+#foreach ($field in $schema.getFields())
     ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
 #end
 
     public Builder() {}
 
     public Builder(Builder other) {
+      this.id = other.id;
 #foreach ($field in $schema.getFields())
       this.${this.mangle($field.name(), $schema.isError())} = other.${this.mangle($field.name(), $schema.isError())};
 #end
     }
 
     public Builder(${this.mangle($schema.getName())} obj) {
+      this.id = obj.getId();
 #foreach ($field in $schema.getFields())
       this.${this.mangle($field.name(), $schema.isError())} = obj.${this.generateGetMethod($schema, $field)}();
 #end
     }
 
+    public Builder id(java.lang.Long id) {
+      this.id = id;
+      return this;
+    }
+
 #foreach ($field in $schema.getFields())
-#if (${this.isReadOnly($field)})#else
+    @com.fasterxml.jackson.annotation.JsonProperty("$field.name()")
     public Builder ${this.generateBuilderMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
 #if ( $this.generateValidityCheck($field, "").length() > 10)
       ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
@@ -127,9 +126,10 @@ public class ${this.mangle($schema.getName())} {
       return this;
     }
 
-#end#end
+#end
+
     public ${this.mangle($schema.getName())} build() {
-      return new ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end);
+      return new ${this.mangle($schema.getName())}(id, #foreach($field in $schema.getFields())${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end);
     }
   }
 }

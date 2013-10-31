@@ -69,9 +69,32 @@ public class JavaObjectCompiler extends SpecificCompiler {
     return requiredOnCreate != null && requiredOnCreate.asBoolean();
   }
 
+  public static String mangle(String name) {
+    if ("id".equals(name)) {
+      return "uuid";
+    }
+    return SpecificCompiler.mangle(name);
+  }
+
+  public static String mangle(String name, boolean ignore) {
+    return mangle(name);
+  }
+
   // TODO: figure out what to do with maps
   public boolean isArray(Schema schema) {
     return schema.getType() == Schema.Type.ARRAY;
+  }
+
+  /** Utility for template use.  Returns the java type for a Schema. */
+  public String javaType(Schema schema) {
+    switch (schema.getType()) {
+      case RECORD:
+      case ENUM:
+      case FIXED:
+        return mangle("com.clover.server.data." + schema.getFullName());
+      default:
+        return super.javaType(schema);
+    }
   }
 
   public boolean isEnum(Schema schema) {
@@ -157,8 +180,12 @@ public class JavaObjectCompiler extends SpecificCompiler {
   }
 
 
-  public String generateGetMethod(Schema schema, String object) {
-    return "get" + Character.toUpperCase(object.charAt(0)) + object.substring(1);
+
+  public static String generateGetMethod(Schema schema, Schema.Field field) {
+    if ("id".equalsIgnoreCase(field.name())) {
+      return "getUuid";
+    }
+    return SpecificCompiler.generateGetMethod(schema, field);
   }
 
   public String generateSetMethod(Schema schema, String object) {
@@ -168,6 +195,9 @@ public class JavaObjectCompiler extends SpecificCompiler {
   public String generateBuilderMethod(Schema schema, Schema.Field field) {
     String setMethodName = generateSetMethod(schema, field);
     String baseMethodName = setMethodName.substring(3);
+    if (baseMethodName.equalsIgnoreCase("id")) {
+      return "uuid";
+    }
     return Character.toLowerCase(baseMethodName.charAt(0)) + baseMethodName.substring(1);
   }
 
