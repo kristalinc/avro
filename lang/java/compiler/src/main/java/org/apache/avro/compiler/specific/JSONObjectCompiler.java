@@ -99,7 +99,7 @@ public class JSONObjectCompiler extends SpecificCompiler {
         JsonNode max = field.getJsonProp("max");
         JsonNode min = field.getJsonProp("min");
         if (min != null || max != null) {
-          check = "if (";
+          check = "if (" + fieldName + " != null && ";
           if (min != null) {
             check += fieldName + " < " + min.asLong();
             if (max != null) check += " && ";
