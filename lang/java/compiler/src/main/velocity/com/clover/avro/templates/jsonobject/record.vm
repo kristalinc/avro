@@ -103,13 +103,13 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
    */
 #end
 #if (${this.isArray($field.schema())})
-  public java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateGetMethod($schema, $field)}() throws org.json.JSONException {
+  public java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateGetMethod($schema, $field)}() {
     java.util.List<${this.javaType($field.schema().getElementType())}> itemList = null;
     if (getJSONObject().has("${this.mangle($field.name(), $schema.isError())}")) {
       itemList = new java.util.ArrayList<${this.javaType($field.schema().getElementType())}>();
-      org.json.JSONArray itemArray = getJSONObject().getJSONArray("${this.mangle($field.name(), $schema.isError())}");
+      org.json.JSONArray itemArray = getJSONObject().optJSONArray("${this.mangle($field.name(), $schema.isError())}");
       for (int i = 0; i < itemArray.length(); i++) {
-        org.json.JSONObject obj = itemArray.getJSONObject(i);
+        org.json.JSONObject obj = itemArray.optJSONObject(i);
 #if (${this.isString($field.schema().getElementType())})
         ${this.javaType($field.schema().getElementType())} item = obj.toString();
 #else
