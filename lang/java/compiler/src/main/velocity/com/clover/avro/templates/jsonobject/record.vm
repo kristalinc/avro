@@ -68,7 +68,7 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
   }
 #end
 
-  protected org.json.JSONObject getJSONObject() {
+  public org.json.JSONObject getJSONObject() {
     try {
       if (jsonObject == null) {
         if (jsonString != null) {
