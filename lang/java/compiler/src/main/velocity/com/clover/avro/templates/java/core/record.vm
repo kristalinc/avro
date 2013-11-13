@@ -15,9 +15,7 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
-
 ## Modifications by Duane Moore, Clover, Aug 2013
-
 #if ($schema.getNamespace())
 package com.clover.server.data.$schema.getNamespace();
 #end
@@ -46,9 +44,13 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 #end  {
     this.id = id;
 #foreach ($field in $schema.getFields())
+#if ($this.isArray($field))
+    this.${this.mangle($field.name())} = toImmutableList(${this.mangle($field.name())});
+#else
     this.${this.mangle($field.name())} = ${this.mangle($field.name())};
 #end
-}
+#end
+  }
 #end
 
   @com.fasterxml.jackson.annotation.JsonIgnore
@@ -61,6 +63,8 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
   /**
   * $field.doc()
   **/
+#end
+#if ($field.name() == "id")  @com.fasterxml.jackson.annotation.JsonProperty("id")
 #end
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return ${this.mangle($field.name(), $schema.isError())};
@@ -79,11 +83,21 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 #end
   }
 
-
-  public java.lang.String toString(com.clover.message.Encoder encoder) {
+  public void encode(com.clover.message.Encoder encoder) {
+      encoder.registerMessage(this);
 #foreach ($field in $schema.getFields())
+#if ($this.isArray($field))
+    encoder.writeList("$field.name()", ${this.mangle($field.name())});
+#else
     encoder.write("$field.name()", ${this.mangle($field.name())});
 #end
+#end
+    encoder.endMessage(this);
+  }
+
+
+  public java.lang.String toString(com.clover.message.Encoder encoder) {
+    encode(encoder);
     return encoder.toString();
   }
 
@@ -126,6 +140,15 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
       return this;
     }
 
+#if($this.isRecord($field))
+    public Builder ${this.generateBuilderMethod($schema, $field)}(com.clover.message.Message.Builder<${this.javaType($field.schema())}> ${this.mangle($field.name(), $schema.isError())}Builder) {
+#if ( $this.generateValidityCheck($field, "").length() > 10)
+      ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+#end
+      this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())}Builder.build();
+      return this;
+    }
+#end
 #end
 
     public ${this.mangle($schema.getName())} build() {

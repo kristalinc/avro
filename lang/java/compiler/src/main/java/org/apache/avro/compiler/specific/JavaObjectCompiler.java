@@ -81,8 +81,8 @@ public class JavaObjectCompiler extends SpecificCompiler {
   }
 
   // TODO: figure out what to do with maps
-  public boolean isArray(Schema schema) {
-    return schema.getType() == Schema.Type.ARRAY;
+  public boolean isArray(Schema.Field field) {
+    return field.schema().getType() == Schema.Type.ARRAY;
   }
 
   /** Utility for template use.  Returns the java type for a Schema. */
@@ -103,6 +103,14 @@ public class JavaObjectCompiler extends SpecificCompiler {
 
   public boolean isString(Schema schema) {
     return schema.getType() == Schema.Type.STRING;
+  }
+
+  public boolean isRecord(Schema.Field field) {
+    return field.schema().getType() == Schema.Type.RECORD;
+  }
+
+  public boolean isReference(Schema.Field field) {
+    return field.schema().getName().equals("Reference");
   }
 
   public String generateEnum(List<Schema.Field> fields) {

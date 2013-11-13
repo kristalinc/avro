@@ -15,9 +15,11 @@
 ## See the License for the specific language governing permissions and
 ## limitations under the License.
 ##
+
 #if ($protocol.getNamespace())
 package com.clover.core.protocol.$protocol.getNamespace();
 #end
+
 
 @SuppressWarnings("all")
 #if ($protocol.getDoc())
