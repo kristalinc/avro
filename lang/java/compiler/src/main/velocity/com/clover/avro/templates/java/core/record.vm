@@ -112,6 +112,9 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
     public Builder() {}
 
     public Builder(Builder other) {
+      if (other == null) {
+        return;
+      }
       this.id = other.id;
 #foreach ($field in $schema.getFields())
       this.${this.mangle($field.name(), $schema.isError())} = other.${this.mangle($field.name(), $schema.isError())};
@@ -119,6 +122,9 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
     }
 
     public Builder(${this.mangle($schema.getName())} obj) {
+      if (obj == null) {
+        return;
+      }
       this.id = obj.getId();
 #foreach ($field in $schema.getFields())
       this.${this.mangle($field.name(), $schema.isError())} = obj.${this.generateGetMethod($schema, $field)}();
