@@ -7,3 +7,4 @@ target
 /build
 test-output
 /dist
+.DS_Store
