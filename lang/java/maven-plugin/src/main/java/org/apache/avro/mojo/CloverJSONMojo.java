@@ -57,6 +57,11 @@ public class CloverJSONMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
+  /**
+   * @parameter
+   */
+  private String basePackage = "";
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -72,9 +77,15 @@ public class CloverJSONMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
+    if (basePackage != null) {
+      String packageDir = basePackage.replace('.', File.separatorChar);
+      outputDirectory = new File(outputDirectory, packageDir);
+    }
+
     JSONObjectCompiler compiler = new JSONObjectCompiler(schema);
     compiler.setTemplateDir("/com/clover/avro/templates/jsonobject/");
     compiler.setStringType(StringType.String);
+    compiler.setBasePackage(basePackage);
     //compiler.setFieldVisibility(getFieldVisibility());
     compiler.setCreateSetters(createSetters);
     compiler.compileToDestination(src, outputDirectory);

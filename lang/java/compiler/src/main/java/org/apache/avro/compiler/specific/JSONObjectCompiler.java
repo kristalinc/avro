@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class JSONObjectCompiler extends SpecificCompiler {
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+  private String basePackage;
 
   public JSONObjectCompiler(Schema schema) {
     super(schema);
@@ -128,6 +129,8 @@ public class JSONObjectCompiler extends SpecificCompiler {
       if (field.schema().getType() != Schema.Type.STRING) {
         fallback = fallback.replace("\"", "");
       }
+    } else if (field.schema().getType() == Schema.Type.STRING) {
+      fallback = ", null";
     }
     return fallback;
   }
@@ -202,6 +205,14 @@ public class JSONObjectCompiler extends SpecificCompiler {
     return false;
   }
 
+  public void setBasePackage(String basePackage) {
+    this.basePackage = basePackage;
+  }
+
+  public String getNamespace(Schema schema) {
+    return basePackage + "." + schema.getNamespace();
+  }
+
   private Schema getBaseSchema(Schema schema) {
     if (schema.getType() == Schema.Type.UNION) {
       List<Schema> types = schema.getTypes(); // elide unions with null
@@ -211,4 +222,16 @@ public class JSONObjectCompiler extends SpecificCompiler {
     }
     return schema;
   }
+
+  public String javaType(Schema schema) {
+    switch (schema.getType()) {
+      case RECORD:
+      case ENUM:
+      case FIXED:
+        return mangle(basePackage + "." + schema.getFullName());
+      default:
+        return super.javaType(schema);
+    }
+  }
+
 }

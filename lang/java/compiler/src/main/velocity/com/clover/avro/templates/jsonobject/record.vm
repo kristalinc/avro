@@ -18,8 +18,8 @@
 
 ## Modifications by Duane Moore, Clover, Aug 2013
 
-#if ($schema.getNamespace())
-package $schema.getNamespace();
+#if ($this.getNamespace($schema))
+package $this.getNamespace($schema);
 #end
 
 @SuppressWarnings("all")
@@ -90,8 +90,10 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
     if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
 #end#end
 #foreach ($field in $schema.getFields())
+#if (${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})})
   ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())} = ${this.generateGetMethod($schema, $field)}();
   ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+#end
 #end
     // TODO: also validate string length, valid ranges and other integrity checks
 }
@@ -144,7 +146,8 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
   }
 #else
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    return getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});
+    return ${this.generateHasMethod($schema, $field)}() ?
+      getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)}) : null;
   }
 #end
 
@@ -174,11 +177,15 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
     }
 #else
     ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+    try {
 #if (${this.isRecord($field.schema())})
-    getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
 #else
-    getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())});
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())});
 #end
+    } catch (org.json.JSONException e) {
+      throw new IllegalArgumentException(e);
+    }
 #end
   }
 #end
