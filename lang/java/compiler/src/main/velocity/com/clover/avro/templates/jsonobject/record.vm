@@ -116,7 +116,7 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
         org.json.JSONObject obj = itemArray.optJSONObject(i);
         ${this.javaType($field.schema().getElementType())} item = new ${this.javaType($field.schema().getElementType())}(obj);
 #else
-        ${this.javaType($field.schema().getElementType())} item = (${this.javaType($field.schema().getElementType())})itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
+        ${this.javaType($field.schema().getElementType())} item = itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
 #end
         itemList.add(item);
       }
