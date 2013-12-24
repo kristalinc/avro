@@ -29,24 +29,56 @@ package $this.getNamespace($schema);
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public class ${this.mangle($schema.getName())} implements android.os.Parcelable, com.clover.sdk.v1.Validator {
+public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, com.clover.sdk.v1.Validator {
 
-  protected String jsonString = null;
-  protected org.json.JSONObject jsonObject = null;
+  private String jsonString = null;
+  private org.json.JSONObject jsonObject = null;
 
+  /**
+   * Constructs a new empty instance.
+   */
   public ${this.mangle($schema.getName())}() { }
 
 #if ($schema.getFields().size() > 0)
+  /**
+   * Constructs a new instance from the given JSON String.
+   */
   public ${this.mangle($schema.getName())}(String json) {
     this.jsonString = json;
   }
 
+  /**
+   * Construct a new instance backed by the given JSONObject, be careful the parameter is not copied.
+   */
   public ${this.mangle($schema.getName())}(org.json.JSONObject jsonObject) {
     this.jsonObject = jsonObject;
   }
+
+  /**
+   * Constructs a new instance that is a copy of the source instance.
+   */
+  public ${this.mangle($schema.getName())}(${this.mangle($schema.getName())} src) {
+    org.json.JSONObject jsonObjectSrc = src.getJSONObject();
+
+    int i = 0, length = jsonObjectSrc.length();
+    if (length == 0) return;
+
+    String[] names = new String[length];
+    for (java.util.Iterator iterator = jsonObjectSrc.keys(); iterator.hasNext(); i++) {
+      names[i] = (String)iterator.next();
+    }
+
+    try {
+      this.jsonObject = new org.json.JSONObject(jsonObjectSrc, names);
+    } catch (org.json.JSONException e) {
+      throw new IllegalArgumentException(e);
+    }
+  }
 #end
 
-
+  /**
+   * Returns the internal JSONObject backing this instance, be careful the returned object is not a copy.
+   */
   public org.json.JSONObject getJSONObject() {
     try {
       if (jsonObject == null) {
