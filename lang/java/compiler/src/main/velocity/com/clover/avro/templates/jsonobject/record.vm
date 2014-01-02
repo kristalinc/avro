@@ -112,11 +112,11 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
       itemList = new java.util.ArrayList<${this.javaType($field.schema().getElementType())}>();
       org.json.JSONArray itemArray = getJSONObject().optJSONArray("${this.mangle($field.name(), $schema.isError())}");
       for (int i = 0; i < itemArray.length(); i++) {
+#if (${this.isRecord($field.schema())})
         org.json.JSONObject obj = itemArray.optJSONObject(i);
-#if (${this.isString($field.schema().getElementType())})
-        ${this.javaType($field.schema().getElementType())} item = obj.toString();
-#else
         ${this.javaType($field.schema().getElementType())} item = new ${this.javaType($field.schema().getElementType())}(obj);
+#else
+        ${this.javaType($field.schema().getElementType())} item = itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
 #end
         itemList.add(item);
       }
