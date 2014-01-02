@@ -15,6 +15,7 @@ import java.util.List;
 public class JSONObjectCompiler extends SpecificCompiler {
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
   private String basePackage;
+  private String copyrightNotice;
 
   public JSONObjectCompiler(Schema schema) {
     super(schema);
@@ -203,6 +204,16 @@ public class JSONObjectCompiler extends SpecificCompiler {
       return ((types.size() == 2) && types.contains(NULL_SCHEMA));
     }
     return false;
+  }
+
+  @Override
+  public String getFileHeader() {
+    String defaultHeader = super.getFileHeader();
+    return copyrightNotice + "\n\n" + defaultHeader;
+  }
+
+  public void setCopyrightNotice(String copyrightNotice) {
+    this.copyrightNotice = copyrightNotice;
   }
 
   public void setBasePackage(String basePackage) {

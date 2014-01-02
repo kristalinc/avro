@@ -62,6 +62,22 @@ public class CloverJSONMojo extends AbstractAvroMojo {
    */
   private String basePackage = "";
 
+  private static final String COPYRIGHT_NOTICE = "/*\n" +
+      " * Copyright (C) 2013 Clover Network, Inc.\n" +
+      " *\n" +
+      " * Licensed under the Apache License, Version 2.0 (the \"License\");\n" +
+      " * you may not use this file except in compliance with the License.\n" +
+      " * You may obtain a copy of the License at\n" +
+      " *\n" +
+      " *    http://www.apache.org/licenses/LICENSE-2.0\n" +
+      " *\n" +
+      " * Unless required by applicable law or agreed to in writing, software\n" +
+      " * distributed under the License is distributed on an \"AS IS\" BASIS,\n" +
+      " * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n" +
+      " * See the License for the specific language governing permissions and\n" +
+      " * limitations under the License.\n" +
+      " */";
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -69,7 +85,7 @@ public class CloverJSONMojo extends AbstractAvroMojo {
 
     // This is necessary to maintain backward-compatibility. If there are  
     // no imported files then isolate the schemas from each other, otherwise
-    // allow them to share a single schema so resuse and sharing of schema
+    // allow them to share a single schema so reuse and sharing of schema
     // is possible.
     if (imports == null) {
       schema = new Schema.Parser().parse(src);
@@ -83,6 +99,7 @@ public class CloverJSONMojo extends AbstractAvroMojo {
     }
 
     JSONObjectCompiler compiler = new JSONObjectCompiler(schema);
+    compiler.setCopyrightNotice(COPYRIGHT_NOTICE);
     compiler.setTemplateDir("/com/clover/avro/templates/jsonobject/");
     compiler.setStringType(StringType.String);
     compiler.setBasePackage(basePackage);

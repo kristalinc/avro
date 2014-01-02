@@ -29,45 +29,49 @@ package $this.getNamespace($schema);
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public class ${this.mangle($schema.getName())} implements android.os.Parcelable {
+public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, com.clover.sdk.v1.Validator {
 
-  protected String jsonString = null;
-  protected org.json.JSONObject jsonObject = null;
+  private String jsonString = null;
+  private org.json.JSONObject jsonObject = null;
+
+  /**
+   * Constructs a new empty instance.
+   */
+  public ${this.mangle($schema.getName())}() { }
 
 #if ($schema.getFields().size() > 0)
-  public ${this.mangle($schema.getName())}(String json, boolean ignore) {
+  /**
+   * Constructs a new instance from the given JSON String.
+   */
+  public ${this.mangle($schema.getName())}(String json) {
     this.jsonString = json;
   }
 
+  /**
+   * Construct a new instance backed by the given JSONObject, be careful the parameter is not copied.
+   */
   public ${this.mangle($schema.getName())}(org.json.JSONObject jsonObject) {
     this.jsonObject = jsonObject;
   }
 
-#if ($this.getSettableFields($schema).size() == $schema.getFields().size())#else
-  public ${this.mangle($schema.getName())}(#foreach($field in $this.getSettableFields($schema))${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $this.getSettableFields($schema).size()), #end#end) throws org.json.JSONException {
-#foreach ($field in $this.getSettableFields($schema))
-#if (${this.isRequiredOnCreate($field)})
-    if (${this.mangle($field.name())} == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
-#end
-#end
-#foreach ($field in $this.getSettableFields($schema))
-    ${this.generateSetMethod($schema, $field)}(${this.mangle($field.name())});
-#end
-  }
+  /**
+   * Constructs a new instance that is a deep copy of the source instance.
+   */
+  public ${this.mangle($schema.getName())}(${this.mangle($schema.getName())} src) {
+    org.json.JSONObject jsonObjectSrc = src.getJSONObject();
 
-#end
-  public ${this.mangle($schema.getName())}(#foreach($field in $schema.getFields())${this.javaType($field.schema())} ${this.mangle($field.name())}#if($velocityCount < $schema.getFields().size()), #end#end) throws org.json.JSONException {
-#foreach ($field in $schema.getFields())
-#if (${this.isRequiredOnCreate($field)})
-    if (${this.mangle($field.name())} == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
-#end
-#end
-#foreach ($field in $schema.getFields())
-    ${this.generateSetMethod($schema, $field)}(${this.mangle($field.name())});
-#end
+    try {
+      // Makes a deep copy, but isn't the most performant
+      this.jsonObject = new org.json.JSONObject(jsonObjectSrc.toString());
+    } catch (org.json.JSONException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 #end
 
+  /**
+   * Returns the internal JSONObject backing this instance, be careful the returned object is not a copy.
+   */
   public org.json.JSONObject getJSONObject() {
     try {
       if (jsonObject == null) {
@@ -79,25 +83,34 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
         }
       }
     } catch (org.json.JSONException e) {
-      // print some kind of error
+      throw new IllegalArgumentException(e);
     }
     return jsonObject;
   }
 
-#if ($this.getRequiredFields($schema).size() > 0)
-  public void validate() throws org.json.JSONException {
-#foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
-    if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
-#end#end
+
+  @Override
+  public void validate() {
 #foreach ($field in $schema.getFields())
-#if (${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})})
-  ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())} = ${this.generateGetMethod($schema, $field)}();
-  ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
+#set( $validityCheck = "" )
+#set( $validityCheck = $this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())}) )
+#set( $needsValidityCheck = $validityCheck.length() > 0 )
+#set( $needsRequiredCheck = ${this.isRequiredOnCreate($field)} )
+#if ($needsRequiredCheck || $needsValidityCheck)
+#if( !$foreach.first )
+
+#end
+    ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())} = ${this.generateGetMethod($schema, $field)}();
+#if ($needsRequiredCheck)
+    if (${this.mangle($field.name(), $schema.isError())} == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
+#end
+#if ($needsValidityCheck)
+    ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
 #end
 #end
-    // TODO: also validate string length, valid ranges and other integrity checks
-}
 #end
+  }
+
 
 #foreach ($field in $schema.getFields())
 #if ($field.doc())
@@ -112,8 +125,11 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
       itemList = new java.util.ArrayList<${this.javaType($field.schema().getElementType())}>();
       org.json.JSONArray itemArray = getJSONObject().optJSONArray("${this.mangle($field.name(), $schema.isError())}");
       for (int i = 0; i < itemArray.length(); i++) {
-#if (${this.isRecord($field.schema())})
+#if (${this.isRecord($field.schema().getElementType())})
         org.json.JSONObject obj = itemArray.optJSONObject(i);
+        if (obj == null) {
+          continue;
+        }
         ${this.javaType($field.schema().getElementType())} item = new ${this.javaType($field.schema().getElementType())}(obj);
 #else
         ${this.javaType($field.schema().getElementType())} item = itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
@@ -133,7 +149,6 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
         return e;
       }
     }
-    // throw exception or return null?
     return null;
   }
 #elseif (${this.isRecord($field.schema())})
@@ -158,39 +173,45 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
   public boolean ${this.generateHasMethod($schema, $field)}() {
     return getJSONObject().has("${this.mangle($field.name(), $schema.isError())}");
   }
+
 #end
 
 #if (${this.isCreateSetters()})
 #foreach ($field in $schema.getFields())
-  public void ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) throws org.json.JSONException {
+  public ${this.mangle($schema.getName())} ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
+    try {
 #if (${this.isArray($field.schema())})
     if (${this.mangle($field.name(), $schema.isError())} != null) {
-      org.json.JSONArray array = new org.json.JSONArray();
-      for (${this.javaType($field.schema().getElementType())} obj : ${this.mangle($field.name(), $schema.isError())}) {
-#if (${this.isString($field.schema().getElementType())})
-        array.put(obj.toString());
+        org.json.JSONArray array = new org.json.JSONArray();
+        for (${this.javaType($field.schema().getElementType())} obj : ${this.mangle($field.name(), $schema.isError())}) {
+          if (obj == null) {
+            continue;
+          }
+#if (${this.isRecord($field.schema().getElementType())})
+          array.put(obj.getJSONObject());
 #else
-        array.put(obj.getJSONObject());
+          array.put(obj);
 #end
+        }
+        getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", array);
+      } else {
+        getJSONObject().remove("${this.mangle($field.name())}");
       }
-      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", array);
-    }
 #else
-    ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
-    try {
 #if (${this.isRecord($field.schema())})
       getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
 #else
       getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())});
 #end
+#end
     } catch (org.json.JSONException e) {
       throw new IllegalArgumentException(e);
     }
-#end
+    return this;
   }
-#end
-#end
 
+#end
+#end
 
   @Override
   public int describeContents() {
@@ -204,39 +225,34 @@ public class ${this.mangle($schema.getName())} implements android.os.Parcelable 
   }
 
   public static final android.os.Parcelable.Creator<${this.mangle($schema.getName())}> CREATOR = new android.os.Parcelable.Creator<${this.mangle($schema.getName())}>() {
+    @Override
     public ${this.mangle($schema.getName())} createFromParcel(android.os.Parcel in) {
       String json = in.readString();
-      return new ${this.mangle($schema.getName())}(json, true);
+      return new ${this.mangle($schema.getName())}(json);
     }
 
+    @Override
     public ${this.mangle($schema.getName())}[] newArray(int size) {
       return new ${this.mangle($schema.getName())}[size];
     }
   };
 
-## Builder interface
-public static class Builder {
+
+  public interface Constraints {
 
 #foreach ($field in $schema.getFields())
-#foreach ($annotation in $this.javaAnnotations($field)) @$annotation #end
-#if (${this.isReadOnly($field)})#else
-  private ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
-#end#end
+    public static final boolean ${this.mangle($field.name(), $schema.isError()).toUpperCase()}_IS_REQUIRED = ${this.isRequiredOnCreate($field)};
+#if ($field.getJsonProp("length"))
+    public static final long ${this.mangle($field.name(), $schema.isError()).toUpperCase()}_MAX_LEN = $field.getJsonProp("length").asLong();
+#end
+#if ($field.getJsonProp("min"))
+    public static final long ${this.mangle($field.name(), $schema.isError()).toUpperCase()}_MIN = $field.getJsonProp("min").asLong();
+#end
+#if ($field.getJsonProp("max"))
+    public static final long ${this.mangle($field.name(), $schema.isError()).toUpperCase()}_MAX = $field.getJsonProp("max").asLong();
+#end
 
-  public Builder() {}
-
-#foreach ($field in $schema.getFields())
-#if (${this.isReadOnly($field)})#else
-  public Builder ${this.generateBuilderMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
-    ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
-    this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
-    return this;
+#end
   }
-#end#end
-
-  public ${this.mangle($schema.getName())} build() throws org.json.JSONException {
-    return new ${this.mangle($schema.getName())} (#foreach($field in $this.getSettableFields($schema))${this.mangle($field.name())}#if($velocityCount < $this.getSettableFields($schema).size()), #end#end);
-  }
-}
 
 }
