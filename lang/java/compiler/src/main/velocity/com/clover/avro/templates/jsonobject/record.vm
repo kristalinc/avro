@@ -121,9 +121,9 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #if (${this.isArray($field.schema())})
   public java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateGetMethod($schema, $field)}() {
     java.util.List<${this.javaType($field.schema().getElementType())}> itemList = null;
-    if (getJSONObject().has("${this.mangle($field.name(), $schema.isError())}")) {
-      itemList = new java.util.ArrayList<${this.javaType($field.schema().getElementType())}>();
+    if (!getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) {
       org.json.JSONArray itemArray = getJSONObject().optJSONArray("${this.mangle($field.name(), $schema.isError())}");
+      itemList = new java.util.ArrayList<${this.javaType($field.schema().getElementType())}>(itemArray.length());
       for (int i = 0; i < itemArray.length(); i++) {
 #if (${this.isRecord($field.schema().getElementType())})
         org.json.JSONObject obj = itemArray.optJSONObject(i);
@@ -161,8 +161,8 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 #else
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    return ${this.generateHasMethod($schema, $field)}() ?
-      getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)}) : null;
+    return getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}") ? null :
+      getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});
   }
 #end
 
