@@ -29,7 +29,7 @@ package $this.getNamespace($schema);
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, com.clover.sdk.v1.Validator {
+public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, ${this.getBasePackage()}.Validator {
 
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
