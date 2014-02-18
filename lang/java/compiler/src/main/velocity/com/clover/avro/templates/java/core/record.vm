@@ -73,15 +73,19 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 
 #end
 
-  public void validate() {
+  public void validate() throws IllegalArgumentException {
+    List<String> errors = new java.util.LinkedList<String>();
 #foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
-    if (${this.generateGetMethod($schema, $field)}() == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
+    if (${this.generateGetMethod($schema, $field)}() == null) errors.add("'${this.mangle($field.name())}' is required to be non-null");
 #end#end
 #foreach ($field in $schema.getFields())
 #if($this.generateValidityCheck($field, "").length() > 10)
     ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
 #end
 #end
+    if (errors.size() > 0) {
+      throw new IllegalArgumentException(java.util.Arrays.toString(errors.toArray()));
+    }
   }
 
   public void encode(com.clover.message.Encoder encoder) {

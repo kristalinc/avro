@@ -42,7 +42,7 @@ public class JavaObjectCompiler extends SpecificCompiler {
       case STRING:
         JsonNode length = field.getJsonProp("length");
         if (length != null) {
-          check = "if (" + fieldName + " != null && " + fieldName + ".length() > " + length.asLong() + ") throw new IllegalArgumentException(\"Maximum string length exceeded for '" + fieldName + "'\");";
+          check = "if (" + fieldName + " != null && " + fieldName + ".length() > " + length.asLong() + ") errors.add(\"Maximum string length exceeded for '" + fieldName + "'\");";
         }
         break;
       case BYTES:   break;
