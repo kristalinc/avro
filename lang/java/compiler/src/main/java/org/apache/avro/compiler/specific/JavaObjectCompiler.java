@@ -17,6 +17,7 @@ import java.util.Map;
  */
 public class JavaObjectCompiler extends SpecificCompiler {
   private static final Schema NULL_SCHEMA = Schema.create(Schema.Type.NULL);
+  private String basePackage;
 
   public JavaObjectCompiler(Schema schema) {
     super(schema);
@@ -54,6 +55,18 @@ public class JavaObjectCompiler extends SpecificCompiler {
       default: throw new RuntimeException("Unknown type: "+schema);
     }
     return check;
+  }
+
+  public String getBasePackage() {
+    return basePackage;
+  }
+
+  public void setBasePackage(String basePackage) {
+    this.basePackage = basePackage;
+  }
+
+  public String getNamespace(Schema schema) {
+    return basePackage + "." + schema.getNamespace();
   }
 
   public List<Schema.Field> getRequiredFields(Schema schema) {

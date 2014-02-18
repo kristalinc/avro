@@ -16,8 +16,9 @@
 ## limitations under the License.
 ##
 ## Modifications by Duane Moore, Clover, Aug 2013
-#if ($schema.getNamespace())
-package com.clover.server.data.$schema.getNamespace();
+
+#if ($this.getNamespace($schema))
+package $this.getNamespace($schema);
 #end
 
 

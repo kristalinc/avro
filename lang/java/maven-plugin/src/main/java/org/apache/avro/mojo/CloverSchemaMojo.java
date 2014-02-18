@@ -39,6 +39,11 @@ public class CloverSchemaMojo extends AbstractAvroMojo {
    */
   private String[] testIncludes = new String[] { "**/*.avsc" };
 
+  /**
+   * @parameter
+   */
+  private String basePackage = "";
+
   @Override
   protected void doCompile(String filename, File sourceDirectory, File outputDirectory) throws IOException {
     File src = new File(sourceDirectory, filename);
@@ -54,14 +59,28 @@ public class CloverSchemaMojo extends AbstractAvroMojo {
       schema = schemaParser.parse(src);
     }
 
+    if (basePackage != null) {
+      String packageDir = basePackage.replace('.', File.separatorChar);
+      outputDirectory = new File(outputDirectory, packageDir);
+    }
+
     JavaObjectCompiler compiler = new JavaObjectCompiler(schema);
     compiler.setTemplateDir("/com/clover/avro/templates/java/core/");
     //compiler.setTemplateDir(templateDirectory);
     //compiler.setStringType(GenericData.StringType.valueOf(stringType));
     //compiler.setFieldVisibility(getFieldVisibility());
+    compiler.setBasePackage(basePackage);
     compiler.setStringType(GenericData.StringType.String);
     compiler.setCreateSetters(createSetters);
     compiler.compileToDestination(src, outputDirectory);
+  }
+
+  public String getBasePackage() {
+    return basePackage;
+  }
+
+  public void setBasePackage(String basePackage) {
+    this.basePackage = basePackage;
   }
 
   @Override
