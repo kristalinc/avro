@@ -74,7 +74,7 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 #end
 
   public void validate() throws IllegalArgumentException {
-    List<String> errors = new java.util.LinkedList<String>();
+    java.util.List<String> errors = new java.util.LinkedList<String>();
 #foreach ($field in $this.getRequiredFields($schema))#if (${this.isRequiredOnCreate($field)})
     if (${this.generateGetMethod($schema, $field)}() == null) errors.add("'${this.mangle($field.name())}' is required to be non-null");
 #end#end
@@ -145,6 +145,7 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
     @com.fasterxml.jackson.annotation.JsonProperty("$field.name()")
     public Builder ${this.generateBuilderMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
 #if ( $this.generateValidityCheck($field, "").length() > 10)
+      java.util.List<String> errors = new java.util.LinkedList<String>();
       ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
 #end
       this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
