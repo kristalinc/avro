@@ -89,15 +89,12 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
   }
 
   public void encode(com.clover.message.Encoder encoder) {
-      encoder.registerMessage(this);
+#if ($schema.getProp("url"))
+    writeMerchantRelativeHref("$this.parseUrl($schema.getProp("url"))");
+#end
 #foreach ($field in $schema.getFields())
-#if ($this.isArray($field))
-    encoder.writeList("$field.name()", ${this.mangle($field.name())});
-#else
-    encoder.write("$field.name()", ${this.mangle($field.name())});
+    $this.writeFieldEncoder($field)
 #end
-#end
-    encoder.endMessage(this);
   }
 
 

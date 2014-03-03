@@ -110,6 +110,28 @@ public class JavaObjectCompiler extends SpecificCompiler {
     }
   }
 
+  public static String parseUrl(String url) {
+    return url.replace("{id}", "\" + getUuid() + \"");
+  }
+
+  public String writeFieldEncoder(Schema.Field field) {
+    if (field.getProp("url") != null) {
+      if (isArray(field)) {
+        return "encoder.writeMerchantRelativeList(\"" + field.name() + "\", " + mangle(field.name())
+               + ", \"" + parseUrl(field.getProp("url")) + "\");";
+      } else {
+        return "encoder.writeMerchantRelativeReference(\"" + field.name() + "\", " + mangle(field.name())
+               + ", \"" + parseUrl(field.getProp("url")) + "\");";
+      }
+    } else {
+      if (isArray(field)) {
+        return "encoder.writeList(\"" + field.name() + "\", " + mangle(field.name()) + ");";
+      } else {
+        return  "encoder.writeValue(\"" + field.name() + "\", " + mangle(field.name()) + ");";
+      }
+    }
+  }
+
   public boolean isEnum(Schema schema) {
     return schema.getType() == Schema.Type.ENUM;
   }
