@@ -33,6 +33,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
+  private android.os.Bundle bundle = null;
 
   /**
    * Constructs a new empty instance.
@@ -65,6 +66,10 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       this.jsonObject = new org.json.JSONObject(jsonObjectSrc.toString());
     } catch (org.json.JSONException e) {
       throw new IllegalArgumentException(e);
+    }
+
+    if (src.bundle != null) {
+      bundle = new android.os.Bundle(src.bundle);
     }
   }
 #end
@@ -220,6 +225,26 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #end
 #end
 
+  /**
+   * Gets a Bundle which can be used to get and set data attached to this instance. The attached Bundle will be
+   * parcelled but not jsonified.
+   */
+  public android.os.Bundle getBundle() {
+    if (bundle == null) {
+      bundle = new android.os.Bundle();
+    }
+    return bundle;
+  }
+
+  /**
+   * Replace this instance's Bundle with the given one.
+   */
+  public ${this.mangle($schema.getName())} setBundle(android.os.Bundle bundle) {
+    this.bundle = bundle;
+    return this;
+  }
+
+
   @Override
   public int describeContents() {
     return 0;
@@ -229,13 +254,16 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   public void writeToParcel(android.os.Parcel dest, int flags) {
     String json = jsonString != null ? jsonString : getJSONObject().toString();
     dest.writeString(json);
+    dest.writeBundle(bundle);
   }
 
   public static final android.os.Parcelable.Creator<${this.mangle($schema.getName())}> CREATOR = new android.os.Parcelable.Creator<${this.mangle($schema.getName())}>() {
     @Override
     public ${this.mangle($schema.getName())} createFromParcel(android.os.Parcel in) {
       String json = in.readString();
-      return new ${this.mangle($schema.getName())}(json);
+      ${this.mangle($schema.getName())} instance = new ${this.mangle($schema.getName())}(json);
+      instance.bundle = in.readBundle();
+      return instance;
     }
 
     @Override
