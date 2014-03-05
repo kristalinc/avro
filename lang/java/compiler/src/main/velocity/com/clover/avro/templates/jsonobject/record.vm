@@ -236,14 +236,6 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return bundle;
   }
 
-  /**
-   * Replace this instance's Bundle with the given one.
-   */
-  public ${this.mangle($schema.getName())} setBundle(android.os.Bundle bundle) {
-    this.bundle = bundle;
-    return this;
-  }
-
 
   @Override
   public int describeContents() {
