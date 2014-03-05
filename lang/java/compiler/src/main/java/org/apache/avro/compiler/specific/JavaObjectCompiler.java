@@ -127,7 +127,7 @@ public class JavaObjectCompiler extends SpecificCompiler {
       if (isArray(field)) {
         return "encoder.writeList(\"" + field.name() + "\", " + mangle(field.name()) + ");";
       } else {
-        return  "encoder.writeValue(\"" + field.name() + "\", " + mangle(field.name()) + ");";
+        return  "encoder.write(\"" + field.name() + "\", " + mangle(field.name()) + ");";
       }
     }
   }

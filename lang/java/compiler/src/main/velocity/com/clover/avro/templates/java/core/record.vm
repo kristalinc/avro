@@ -90,7 +90,7 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 
   public void encode(com.clover.message.Encoder encoder) {
 #if ($schema.getProp("url"))
-    writeMerchantRelativeHref("$this.parseUrl($schema.getProp("url"))");
+    encoder.writeMerchantRelativeHref("$this.parseUrl($schema.getProp("url"))");
 #end
 #foreach ($field in $schema.getFields())
     $this.writeFieldEncoder($field)
