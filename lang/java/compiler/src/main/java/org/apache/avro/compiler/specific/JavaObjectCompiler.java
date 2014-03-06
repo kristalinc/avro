@@ -34,6 +34,7 @@ public class JavaObjectCompiler extends SpecificCompiler {
       case RECORD:
       case ENUM:
       case FIXED:
+      case MAP:
         break;
       case ARRAY:
         break;
@@ -130,6 +131,10 @@ public class JavaObjectCompiler extends SpecificCompiler {
         return  "encoder.write(\"" + field.name() + "\", " + mangle(field.name()) + ");";
       }
     }
+  }
+
+  public boolean isMap(Schema.Field field) {
+    return field.schema().getType() == Schema.Type.MAP;
   }
 
   public boolean isEnum(Schema schema) {

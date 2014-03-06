@@ -168,6 +168,12 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     }
     return null;
   }
+#elseif (${this.isMap($field.schema())})
+  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    if (getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) return null;
+    org.json.JSONObject object = getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}");
+    return ${this.getBasePackage()}.JsonHelper.toMap(object);
+  }
 #else
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}") ? null :

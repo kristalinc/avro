@@ -51,10 +51,8 @@ public class JSONObjectCompiler extends SpecificCompiler {
         return "optJSONObject";
       case ARRAY:
         return "optJSONArray";
-//      case MAP:
-//        return "java.util.Map<"
-//                + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
-//                + javaType(schema.getValueType()) + ">";
+      case MAP:
+        return "optJSONObject";
       case UNION:
         List<Schema> types = schema.getTypes(); // elide unions with null
         if ((types.size() == 2) && types.contains(NULL_SCHEMA))
@@ -80,13 +78,10 @@ public class JSONObjectCompiler extends SpecificCompiler {
       case RECORD:
       case ENUM:
       case FIXED:
+      case MAP:
         break;
       case ARRAY:
         break;
-//      case MAP:
-//        return "java.util.Map<"
-//                + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
-//                + javaType(schema.getValueType()) + ">";
       case UNION:
         return "";
       case STRING:
@@ -141,35 +136,31 @@ public class JSONObjectCompiler extends SpecificCompiler {
 //    check = "if (" + fieldName + " != null && " + fieldName + ".length() > " + length.asLong() + ") throw new IllegalArgumentException(\"Maximum string length exceeded for '" + fieldName + "'\");";
 //  }
 
-  public String convertToJson(Schema schema, String objName) {
-    switch (schema.getType()) {
-      case RECORD:
-      case ENUM:
-      case FIXED:
-        return "java.lang.String item = " + objName + ".toString()";
-      case ARRAY:
-        return "???";
-//      case MAP:
-//        return "java.util.Map<"
-//                + getStringType(schema.getJsonProp(SpecificData.KEY_CLASS_PROP))+","
-//                + javaType(schema.getValueType()) + ">";
-      case UNION:
-        List<Schema> types = schema.getTypes(); // elide unions with null
-        if ((types.size() == 2) && types.contains(NULL_SCHEMA))
-          return jsonAccessor(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
-        return "optJSONObject";
-      case STRING:
-        return "getString";
-//      case BYTES:   return "java.nio.ByteBuffer";
-      case INT:     return "getInt";
-      case LONG:    return "getLong";
-      case FLOAT:   return "getDouble";
-      case DOUBLE:  return "getDouble";
-      case BOOLEAN: return "getBoolean";
-//      case NULL:    return "java.lang.Void";
-      default: throw new RuntimeException("Unknown type: "+schema);
-    }
-  }
+//  public String convertToJson(Schema schema, String objName) {
+//    switch (schema.getType()) {
+//      case RECORD:
+//      case ENUM:
+//      case FIXED:
+//        return "java.lang.String item = " + objName + ".toString()";
+//      case ARRAY:
+//        return "???";
+//      case UNION:
+//        List<Schema> types = schema.getTypes(); // elide unions with null
+//        if ((types.size() == 2) && types.contains(NULL_SCHEMA))
+//          return jsonAccessor(types.get(types.get(0).equals(NULL_SCHEMA) ? 1 : 0));
+//        return "optJSONObject";
+//      case STRING:
+//        return "getString";
+////      case BYTES:   return "java.nio.ByteBuffer";
+//      case INT:     return "getInt";
+//      case LONG:    return "getLong";
+//      case FLOAT:   return "getDouble";
+//      case DOUBLE:  return "getDouble";
+//      case BOOLEAN: return "getBoolean";
+////      case NULL:    return "java.lang.Void";
+//      default: throw new RuntimeException("Unknown type: "+schema);
+//    }
+//  }
 
   public boolean isReadOnly(Schema.Field field) {
     JsonNode readOnly = field.getJsonProp("readonly");
@@ -181,7 +172,10 @@ public class JSONObjectCompiler extends SpecificCompiler {
     return requiredOnCreate != null && requiredOnCreate.asBoolean();
   }
 
-  // TODO: figure out what to do with maps
+  public boolean isMap(Schema schema) {
+    return getBaseSchema(schema).getType() == Schema.Type.MAP;
+  }
+
   public boolean isRecord(Schema schema) {
     return getBaseSchema(schema).getType() == Schema.Type.RECORD;
   }
