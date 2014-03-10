@@ -29,7 +29,7 @@ package $this.getNamespace($schema);
 @$annotation
 #end
 @SuppressWarnings("all")
-public class ${this.mangle($schema.getName())} extends com.clover.message.Message {
+public final class ${this.mangle($schema.getName())} extends com.clover.message.Message {
   private final java.lang.Long id;
 #foreach ($field in $schema.getFields())
   private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
