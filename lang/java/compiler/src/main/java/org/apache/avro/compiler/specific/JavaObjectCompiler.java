@@ -116,13 +116,15 @@ public class JavaObjectCompiler extends SpecificCompiler {
   }
 
   public String writeFieldEncoder(Schema.Field field) {
-    if (field.getProp("url") != null) {
+    String url = field.getProp("url");
+
+    if (url != null) {
       if (isArray(field)) {
         return "encoder.writeMerchantRelativeList(\"" + field.name() + "\", " + mangle(field.name())
-               + ", \"" + parseUrl(field.getProp("url")) + "\");";
+               + ", \"" + parseUrl(url) + "\");";
       } else {
         return "encoder.writeMerchantRelativeReference(\"" + field.name() + "\", " + mangle(field.name())
-               + ", \"" + parseUrl(field.getProp("url")) + "\");";
+               + ", \"" + parseUrl(url) + "\");";
       }
     } else {
       if (isArray(field)) {

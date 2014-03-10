@@ -141,19 +141,12 @@ public class ${this.mangle($schema.getName())} extends com.clover.message.Messag
 #foreach ($field in $schema.getFields())
     @com.fasterxml.jackson.annotation.JsonProperty("$field.name()")
     public Builder ${this.generateBuilderMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
-#if ( $this.generateValidityCheck($field, "").length() > 10)
-      java.util.List<String> errors = new java.util.LinkedList<String>();
-      ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
-#end
       this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())};
       return this;
     }
 
 #if($this.isRecord($field))
     public Builder ${this.generateBuilderMethod($schema, $field)}(com.clover.message.Message.Builder<${this.javaType($field.schema())}> ${this.mangle($field.name(), $schema.isError())}Builder) {
-#if ( $this.generateValidityCheck($field, "").length() > 10)
-      ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
-#end
       this.${this.mangle($field.name(), $schema.isError())} = ${this.mangle($field.name(), $schema.isError())}Builder.build();
       return this;
     }
