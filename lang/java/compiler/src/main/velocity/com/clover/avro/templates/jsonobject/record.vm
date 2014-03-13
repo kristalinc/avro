@@ -34,6 +34,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
   private android.os.Bundle bundle = null;
+  private android.os.Bundle changeLog = null;
 
   /**
    * Constructs a new empty instance.
@@ -65,11 +66,15 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       // Makes a deep copy, but isn't the most performant
       this.jsonObject = new org.json.JSONObject(jsonObjectSrc.toString());
     } catch (org.json.JSONException e) {
-      throw new IllegalArgumentException(e);
+      throw new java.lang.IllegalArgumentException(e);
     }
 
     if (src.bundle != null) {
       bundle = new android.os.Bundle(src.bundle);
+    }
+
+    if (src.changeLog != null) {
+      bundle = new android.os.Bundle(src.changeLog);
     }
   }
 #end
@@ -88,7 +93,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
         }
       }
     } catch (org.json.JSONException e) {
-      throw new IllegalArgumentException(e);
+      throw new java.lang.IllegalArgumentException(e);
     }
     return jsonObject;
   }
@@ -107,7 +112,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #end
     ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())} = ${this.generateGetMethod($schema, $field)}();
 #if ($needsRequiredCheck)
-    if (${this.mangle($field.name(), $schema.isError())} == null) throw new IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
+    if (${this.mangle($field.name(), $schema.isError())} == null) throw new java.lang.IllegalArgumentException("'${this.mangle($field.name())}' is required to be non-null");
 #end
 #if ($needsValidityCheck)
     ${this.generateValidityCheck($field, ${this.mangle($field.name(), $schema.isError())})}
@@ -177,14 +182,22 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #else
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
     return getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}") ? null :
-      getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});
+      getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}");
   }
 #end
 
 #end
 
 #foreach ($field in $schema.getFields())
-  /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set */
+  /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field is set and is not null */
+  public boolean ${this.generateIsNotNullMethod($schema, $field)}() {
+    return !getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}");
+  }
+
+#end
+
+#foreach ($field in $schema.getFields())
+  /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set, however the value could be null */
   public boolean ${this.generateHasMethod($schema, $field)}() {
     return getJSONObject().has("${this.mangle($field.name(), $schema.isError())}");
   }
@@ -194,42 +207,98 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #if (${this.isCreateSetters()})
 #foreach ($field in $schema.getFields())
   public ${this.mangle($schema.getName())} ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
+    logChange("${this.mangle($field.name(), $schema.isError())}");
+
     try {
 #if (${this.isArray($field.schema())})
-      if (${this.mangle($field.name(), $schema.isError())} != null) {
-        org.json.JSONArray array = new org.json.JSONArray();
-        for (${this.javaType($field.schema().getElementType())} obj : ${this.mangle($field.name(), $schema.isError())}) {
-          if (obj == null) {
-            continue;
-          }
-#if (${this.isRecord($field.schema().getElementType())})
-          array.put(obj.getJSONObject());
-#else
-          array.put(obj);
-#end
-        }
-
-        org.json.JSONObject elementsContainer = new org.json.JSONObject();
-        elementsContainer.put("elements", array);
-        getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", elementsContainer);
-      } else {
-        getJSONObject().remove("${this.mangle($field.name())}");
+      if (${this.mangle($field.name(), $schema.isError())} == null) {
+        getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", org.json.JSONObject.NULL);
+        return this;
       }
+
+      org.json.JSONArray array = new org.json.JSONArray();
+      for (${this.javaType($field.schema().getElementType())} obj : ${this.mangle($field.name(), $schema.isError())}) {
+        if (obj == null) {
+          continue;
+        }
+#if (${this.isRecord($field.schema().getElementType())})
+        array.put(obj.getJSONObject());
+#else
+        array.put(obj);
+#end
+      }
+
+      org.json.JSONObject elementsContainer = new org.json.JSONObject();
+      elementsContainer.put("elements", array);
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", elementsContainer);
 #else
 #if (${this.isRecord($field.schema())})
-      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}",
+          ${this.mangle($field.name(), $schema.isError())} == null ? org.json.JSONObject.NULL : ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
 #else
-      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())});
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}",
+          ${this.mangle($field.name(), $schema.isError())} == null ? org.json.JSONObject.NULL : ${this.mangle($field.name(), $schema.isError())});
 #end
 #end
     } catch (org.json.JSONException e) {
-      throw new IllegalArgumentException(e);
+      throw new java.lang.IllegalArgumentException(e);
     }
     return this;
   }
 
 #end
 #end
+
+#foreach ($field in $schema.getFields())
+  /** Clears the '${this.mangle($field.name(), $schema.isError())}' field, the 'has' method for this field will now return false */
+  public void ${this.generateClearMethod($schema, $field)}() {
+    unlogChange("${this.mangle($field.name(), $schema.isError())}");
+    getJSONObject().remove("${this.mangle($field.name(), $schema.isError())}");
+  }
+
+#end
+
+  private void logChange(java.lang.String field) {
+    if (changeLog == null) {
+      changeLog = new android.os.Bundle();
+    }
+    changeLog.putString(field, null);
+  }
+
+  private void unlogChange(java.lang.String field) {
+    if (changeLog != null) {
+      changeLog.remove(field);
+    }
+  }
+
+  /**
+   * Reset the log of changes made to this instance, copyChanges() will now return an empty instance.
+   */
+  public void resetChangeLog() {
+    if (changeLog != null) {
+      changeLog = null;
+    }
+  }
+
+  /**
+   * Create a copy of this instance that contains only fields that were set after the constructor was called.
+   */
+  public ${this.mangle($schema.getName())} copyChanges() {
+    ${this.mangle($schema.getName())} copy = new ${this.mangle($schema.getName())}();
+    if (changeLog != null) {
+      org.json.JSONObject srcObj = getJSONObject();
+      org.json.JSONObject copyObj = copy.getJSONObject();
+      try {
+        for (java.lang.String field : changeLog.keySet()) {
+          copyObj.put(field, srcObj.get(field));
+        }
+      } catch (org.json.JSONException e) {
+        throw new java.lang.IllegalArgumentException(e);
+      }
+    }
+    return copy;
+  }
+
 
   /**
    * Gets a Bundle which can be used to get and set data attached to this instance. The attached Bundle will be
@@ -253,6 +322,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     String json = jsonString != null ? jsonString : getJSONObject().toString();
     dest.writeString(json);
     dest.writeBundle(bundle);
+    dest.writeBundle(changeLog);
   }
 
   public static final android.os.Parcelable.Creator<${this.mangle($schema.getName())}> CREATOR = new android.os.Parcelable.Creator<${this.mangle($schema.getName())}>() {
@@ -261,6 +331,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       String json = in.readString();
       ${this.mangle($schema.getName())} instance = new ${this.mangle($schema.getName())}(json);
       instance.bundle = in.readBundle();
+      instance.changeLog = in.readBundle();
       return instance;
     }
 

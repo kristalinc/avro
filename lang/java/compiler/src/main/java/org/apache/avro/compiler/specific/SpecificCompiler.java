@@ -645,7 +645,17 @@ public class SpecificCompiler {
   public static String generateHasMethod(Schema schema, Field field) {
     return generateMethodName(schema, field, "has");
   }
-  
+
+  /**
+   * Generates the name of a field "isNotNull" method.
+   * @param schema the schema in which the field is defined.
+   * @param field the field for which to generate the accessor name.
+   * @return the name of the isNotNull method for the given field.
+   */
+  public static String generateIsNotNullMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "isNotNull");
+  }
+
   /**
    * Generates the name of a field "clear" method.
    * @param schema the schema in which the field is defined.
