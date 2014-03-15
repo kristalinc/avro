@@ -30,6 +30,9 @@ package $this.getNamespace($schema);
 #end
 @SuppressWarnings("all")
 public final class ${this.mangle($schema.getName())} extends com.clover.message.Message {
+  public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
+  public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
+
   private final java.lang.Long id;
 #foreach ($field in $schema.getFields())
   private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
@@ -102,6 +105,25 @@ public final class ${this.mangle($schema.getName())} extends com.clover.message.
     encode(encoder);
     return encoder.toString();
   }
+
+
+  public org.apache.avro.Schema getSchema() { return SCHEMA$; }
+  // Used by DatumWriter.  Applications should not call.
+  public java.lang.Object get(int field$) {
+    switch (field$) {
+#set ($i = 0)
+#foreach ($field in $schema.getFields())
+        case $i: return ${this.mangle($field.name(), $schema.isError())};
+#set ($i = $i + 1)
+#end
+    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+    }
+    }
+    // Used by DatumReader.  Applications should not call.
+    @SuppressWarnings(value="unchecked")
+    public void put(int field$, java.lang.Object value$) {
+      throw new org.apache.avro.AvroRuntimeException("Unsupported operation");
+    }
 
 
 ## Builder
