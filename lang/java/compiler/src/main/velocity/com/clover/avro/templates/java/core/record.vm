@@ -28,14 +28,13 @@ package $this.getNamespace($schema);
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-@SuppressWarnings("all")
 public final class ${this.mangle($schema.getName())} extends com.clover.message.Message {
   public static final org.apache.avro.Schema SCHEMA$ = new org.apache.avro.Schema.Parser().parse(${this.javaSplit($schema.toString())});
   public static org.apache.avro.Schema getClassSchema() { return SCHEMA$; }
 
-  private final java.lang.Long id;
+  private java.lang.Long id;
 #foreach ($field in $schema.getFields())
-  private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
+  private ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
 #end
 
 #if ($schema.getFields().size() > 0)
@@ -113,18 +112,24 @@ public final class ${this.mangle($schema.getName())} extends com.clover.message.
     switch (field$) {
 #set ($i = 0)
 #foreach ($field in $schema.getFields())
-        case $i: return ${this.mangle($field.name(), $schema.isError())};
+      case $i: return ${this.mangle($field.name(), $schema.isError())};
 #set ($i = $i + 1)
 #end
-    default: throw new org.apache.avro.AvroRuntimeException("Bad index");
+      default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
+  }
+  // Used by DatumReader.  Applications should not call.
+  @SuppressWarnings(value="unchecked")
+  public void put(int field$, java.lang.Object value$) {
+    switch (field$) {
+#set ($i = 0)
+#foreach ($field in $schema.getFields())
+      case $i: ${this.mangle($field.name(), $schema.isError())} = (${this.javaType($field.schema())})value$; break;
+#set ($i = $i + 1)
+#end
+      default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
-    // Used by DatumReader.  Applications should not call.
-    @SuppressWarnings(value="unchecked")
-    public void put(int field$, java.lang.Object value$) {
-      throw new org.apache.avro.AvroRuntimeException("Unsupported operation");
-    }
-
+  }
 
 ## Builder
   public static class Builder extends com.clover.message.Message.Builder<${this.mangle($schema.getName())}> {
