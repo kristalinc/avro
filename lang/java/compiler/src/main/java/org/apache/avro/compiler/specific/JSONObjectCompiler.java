@@ -214,6 +214,10 @@ public class JSONObjectCompiler extends SpecificCompiler {
     return basePackage;
   }
 
+  public String getBaseBasePackage() {
+    return basePackage.substring(0, basePackage.lastIndexOf("."));
+  }
+
   public void setBasePackage(String basePackage) {
     this.basePackage = basePackage;
   }

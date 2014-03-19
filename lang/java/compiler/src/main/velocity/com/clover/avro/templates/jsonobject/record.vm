@@ -29,7 +29,7 @@ package $this.getNamespace($schema);
 #foreach ($annotation in $this.javaAnnotations($schema))
 @$annotation
 #end
-public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, ${this.getBasePackage()}.Validator {
+public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, ${this.getBasePackage()}.Validator, ${this.getBaseBasePackage()}.JSONifiable {
 
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
@@ -50,7 +50,8 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 
   /**
-   * Construct a new instance backed by the given JSONObject, be careful the parameter is not copied.
+   * Construct a new instance backed by the given JSONObject, the parameter is not copied so changes to it will be
+   * reflected in this instance and vice-versa.
    */
   public ${this.mangle($schema.getName())}(org.json.JSONObject jsonObject) {
     this.jsonObject = jsonObject;
@@ -80,7 +81,8 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #end
 
   /**
-   * Returns the internal JSONObject backing this instance, be careful the returned object is not a copy.
+   * Returns the internal JSONObject backing this instance, the return value is not a copy so changes to it will be
+   * reflected in this instance and vice-versa.
    */
   public org.json.JSONObject getJSONObject() {
     try {
@@ -123,11 +125,16 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 
 
 #foreach ($field in $schema.getFields())
-#if ($field.doc())
   /**
+#if ($field.doc())
    * $field.doc()
-   */
 #end
+   * The returned object is not a copy so changes to it will be reflected in this instance and vice-versa.
+#if (${this.isArray($field.schema())})
+   *
+   * The returned List is unmodifiable and will never contain any nulls, even if the source JSON had null entries.
+#end
+   */
 #if (${this.isArray($field.schema())})
   public java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateGetMethod($schema, $field)}() {
     if (getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) {
@@ -147,11 +154,14 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       ${this.javaType($field.schema().getElementType())} item = new ${this.javaType($field.schema().getElementType())}(obj);
 #else
       ${this.javaType($field.schema().getElementType())} item = itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
+      if (item == null) {
+        continue;
+      }
 #end
       itemList.add(item);
     }
 
-    return itemList;
+    return java.util.Collections.unmodifiableList(itemList);
   }
 #elseif (${this.isEnum($field.schema())})
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
@@ -206,6 +216,16 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 
 #if (${this.isCreateSetters()})
 #foreach ($field in $schema.getFields())
+  /**
+   * Sets the field '${this.mangle($field.name(), $schema.isError())}'.
+#if (${this.isArray($field.schema())})
+   *
+   * Nulls in the given List are skipped. List parameter is copied, so it will not reflect any changes, but objects inside it will.
+#else
+   *
+   * The parameter is not copied so changes to it will be reflected in this instance and vice-versa.
+#end
+   */
   public ${this.mangle($schema.getName())} ${this.generateSetMethod($schema, $field)}(${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())}) {
     logChange("${this.mangle($field.name(), $schema.isError())}");
 
@@ -272,12 +292,10 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 
   /**
-   * Reset the log of changes made to this instance, copyChanges() will now return an empty instance.
+   * Reset the log of changes made to this instance, calling copyChanges() after this would return an empty instance.
    */
   public void resetChangeLog() {
-    if (changeLog != null) {
-      changeLog = null;
-    }
+    changeLog = null;
   }
 
   /**
@@ -285,18 +303,28 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
    */
   public ${this.mangle($schema.getName())} copyChanges() {
     ${this.mangle($schema.getName())} copy = new ${this.mangle($schema.getName())}();
-    if (changeLog != null) {
-      org.json.JSONObject srcObj = getJSONObject();
-      org.json.JSONObject copyObj = copy.getJSONObject();
+    copy.mergeChanges(this);
+    copy.resetChangeLog();
+    return copy;
+  }
+
+  /**
+   * Copy all the changed fields from the given source to this instance.
+   */
+  public void mergeChanges(${this.mangle($schema.getName())} src) {
+    if (src.changeLog != null) {
       try {
-        for (java.lang.String field : changeLog.keySet()) {
-          copyObj.put(field, srcObj.get(field));
+        // Make a copy of the source so the destination fields are copies
+        org.json.JSONObject srcObj = new org.json.JSONObject(src.getJSONObject().toString());
+        org.json.JSONObject dstObj = getJSONObject();
+        for (java.lang.String field : src.changeLog.keySet()) {
+          dstObj.put(field, srcObj.get(field));
+          logChange(field);
         }
       } catch (org.json.JSONException e) {
         throw new java.lang.IllegalArgumentException(e);
       }
     }
-    return copy;
   }
 
 
