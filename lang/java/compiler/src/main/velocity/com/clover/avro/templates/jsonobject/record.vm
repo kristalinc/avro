@@ -148,6 +148,18 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
         continue;
       }
       ${this.javaType($field.schema().getElementType())} item = new ${this.javaType($field.schema().getElementType())}(obj);
+#elseif (${this.isEnum($field.schema().getElementType())})
+      String enumString = itemArray.optString(i, null);
+      if (enumString == null) {
+        continue;
+      }
+      ${this.javaType($field.schema().getElementType())} item;
+      try {
+        item = ${this.javaType($field.schema().getElementType())}.valueOf(enumString);
+      } catch (Exception e) {
+        e.printStackTrace();
+        continue;
+      }
 #else
       ${this.javaType($field.schema().getElementType())} item = itemArray.${this.jsonAccessor($field.schema().getElementType())}(i);
       if (item == null) {
@@ -161,14 +173,14 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 #elseif (${this.isEnum($field.schema())})
   public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
-    ${this.javaType($field.schema())}[] enumValues = ${this.javaType($field.schema())}.class.getEnumConstants();
-    // from last to first, so that in case of duplicate values, first wins
-    for (int i = enumValues.length; --i >= 0; ) {
-      ${this.javaType($field.schema())} e = enumValues[i];
-      if (e.toString().equals(getJSONObject().optString("${this.mangle($field.name(), $schema.isError())}"))) {
-        return e;
+    if (${this.generateIsNotNullMethod($schema, $field)}()) {
+      try {
+        return ${this.javaType($field.schema())}.valueOf(getJSONObject().optString("${this.mangle($field.name(), $schema.isError())}"));
+      } catch(Exception e) {
+        e.printStackTrace();
       }
     }
+
     return null;
   }
 #elseif (${this.isRecord($field.schema())})
