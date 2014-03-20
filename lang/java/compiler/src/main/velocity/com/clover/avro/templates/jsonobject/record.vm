@@ -75,7 +75,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     }
 
     if (src.changeLog != null) {
-      bundle = new android.os.Bundle(src.changeLog);
+      changeLog = new android.os.Bundle(src.changeLog);
     }
   }
 #end
