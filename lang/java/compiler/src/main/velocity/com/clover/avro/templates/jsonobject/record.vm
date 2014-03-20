@@ -32,7 +32,7 @@ package $this.getNamespace($schema);
 public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, ${this.getBasePackage()}.Validator, ${this.getBaseBasePackage()}.JSONifiable {
 
 #if ($schema.getProp("authority"))
-  public static final AUTHORITY = "$schema.getProp("authority")";
+  public static final String AUTHORITY = "$schema.getProp("authority")";
 #end
 
   private String jsonString = null;
