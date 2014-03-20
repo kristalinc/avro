@@ -31,6 +31,10 @@ package $this.getNamespace($schema);
 #end
 public final class ${this.mangle($schema.getName())} implements android.os.Parcelable, ${this.getBasePackage()}.Validator, ${this.getBaseBasePackage()}.JSONifiable {
 
+#if ($schema.getProp("authority"))
+  public static final AUTHORITY = "$schema.getProp("authority")";
+#end
+
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
   private android.os.Bundle bundle = null;
@@ -58,7 +62,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 
   /**
-   * Constructs a new instance that is a deep copy of the source instance.
+   * Constructs a new instance that is a deep copy of the source instance. It does not copy the bundle or changelog.
    */
   public ${this.mangle($schema.getName())}(${this.mangle($schema.getName())} src) {
     org.json.JSONObject jsonObjectSrc = src.getJSONObject();
@@ -68,14 +72,6 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       this.jsonObject = new org.json.JSONObject(jsonObjectSrc.toString());
     } catch (org.json.JSONException e) {
       throw new java.lang.IllegalArgumentException(e);
-    }
-
-    if (src.bundle != null) {
-      bundle = new android.os.Bundle(src.bundle);
-    }
-
-    if (src.changeLog != null) {
-      changeLog = new android.os.Bundle(src.changeLog);
     }
   }
 #end
