@@ -30,11 +30,9 @@ package $this.getNamespace($schema);
 #end
 @SuppressWarnings("all")
 public final class ${this.mangle($schema.getName())} extends com.clover.message.Message {
-
 #if ($schema.getProp("authority"))
   public static final String AUTHORITY = "$schema.getProp("authority")";
 #end
-
   private final java.lang.Long id;
 #foreach ($field in $schema.getFields())
   private final ${this.javaType($field.schema())} ${this.mangle($field.name(), $schema.isError())};
