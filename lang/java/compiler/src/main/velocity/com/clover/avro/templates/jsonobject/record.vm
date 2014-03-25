@@ -212,6 +212,13 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return !getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}");
   }
 
+#if (${this.isArray($field.schema())} || ${this.isMap($field.schema())})
+  /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field is set and is not null and is not empty */
+  public boolean ${this.generateIsNotEmptyMethod($schema, $field)}() {
+    return ${this.generateIsNotNullMethod($schema, $field)}() && !${this.generateGetMethod($schema, $field)}().isEmpty();
+  }
+
+#end
 #end
 
 #foreach ($field in $schema.getFields())
