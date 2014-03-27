@@ -271,8 +271,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       getJSONObject().put("${this.mangle($field.name(), $schema.isError())}",
           ${this.mangle($field.name(), $schema.isError())} == null ? org.json.JSONObject.NULL : ${this.mangle($field.name(), $schema.isError())}.getJSONObject());
 #else
-      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}",
-          ${this.mangle($field.name(), $schema.isError())} == null ? org.json.JSONObject.NULL : ${this.mangle($field.name(), $schema.isError())});
+      getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", ${this.mangle($field.name(), $schema.isError())} == null ? org.json.JSONObject.NULL : ${this.getBasePackage()}.JsonHelper.toJSON(${this.mangle($field.name(), $schema.isError())}));
 #end
 #end
     } catch (org.json.JSONException e) {
