@@ -354,6 +354,16 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return bundle;
   }
 
+  @Override
+  public String toString() {
+    String json = jsonString != null ? jsonString : getJSONObject().toString();
+
+    return "${this.mangle($schema.getName())}{" +
+        "json='" + json + "'" +
+        ", bundle=" + bundle +
+        ", changeLog=" + changeLog +
+        '}';
+  }
 
   @Override
   public int describeContents() {
