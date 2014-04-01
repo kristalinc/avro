@@ -35,10 +35,26 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   public static final String AUTHORITY = "$schema.getProp("authority")";
 #end
 
+  private enum CacheKey {
+#foreach ($field in $schema.getFields())
+    ${this.mangle($field.name(), $schema.isError())} {
+      @Override
+      public Object extractValue(${this.mangle($schema.getName())} instance) {
+        return instance.${this.generateExtractMethod($schema, $field)}();
+      }
+    },
+#end
+    ;
+
+    public abstract Object extractValue(${this.mangle($schema.getName())} instance);
+  }
+
   private String jsonString = null;
   private org.json.JSONObject jsonObject = null;
   private android.os.Bundle bundle = null;
   private android.os.Bundle changeLog = null;
+  private Object[] cache = null;
+  private boolean[] cacheHasMapping = null;
 
   /**
    * Constructs a new empty instance.
@@ -65,16 +81,56 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
    * Constructs a new instance that is a deep copy of the source instance. It does not copy the bundle or changelog.
    */
   public ${this.mangle($schema.getName())}(${this.mangle($schema.getName())} src) {
-    org.json.JSONObject jsonObjectSrc = src.getJSONObject();
-
-    try {
-      // Makes a deep copy, but isn't the most performant
-      this.jsonObject = new org.json.JSONObject(jsonObjectSrc.toString());
-    } catch (org.json.JSONException e) {
-      throw new java.lang.IllegalArgumentException(e);
-    }
+    this.jsonString = src.jsonString != null ? src.jsonString : src.getJSONObject().toString();
   }
 #end
+
+  private <T> T cacheGet(CacheKey key) {
+    populateCache();
+    return (T) cache[key.ordinal()];
+  }
+
+  private boolean cacheValueIsNotNull(CacheKey key) {
+    populateCache();
+    return cache[key.ordinal()] != null;
+  }
+
+  private boolean cacheHasKey(CacheKey key) {
+    populateCache();
+    return cacheHasMapping[key.ordinal()];
+  }
+
+  private void cachePutValue(CacheKey key) {
+    populateCache();
+    int index = key.ordinal();
+    cache[index] = key.extractValue(this);
+    cacheHasMapping[index] = true;
+  }
+
+  private void cacheRemoveValue(CacheKey key) {
+    populateCache();
+    int index = key.ordinal();
+    cache[index] = null;
+    cacheHasMapping[index] = false;
+  }
+
+  private void populateCache() {
+    if (cache == null) {
+      int size = CacheKey.values().length;
+      cache = new Object[size];
+      cacheHasMapping = new boolean[size];
+
+      java.util.Iterator<String> jsonKeyIterator = getJSONObject().keys();
+      while (jsonKeyIterator.hasNext()) {
+        String jsonKeyString = jsonKeyIterator.next();
+        try {
+          cachePutValue(CacheKey.valueOf(jsonKeyString));
+        } catch (IllegalArgumentException e) {
+          // Ignore unknown json key string
+        }
+      }
+    }
+  }
 
   /**
    * Returns the internal JSONObject backing this instance, the return value is not a copy so changes to it will be
@@ -131,8 +187,12 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
    * The returned List is unmodifiable and will never contain any nulls, even if the source JSON had null entries.
 #end
    */
+  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+    return cacheGet(CacheKey.${this.mangle($field.name(), $schema.isError())});
+  }
+
 #if (${this.isArray($field.schema())})
-  public java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateGetMethod($schema, $field)}() {
+  private java.util.List<${this.javaType($field.schema().getElementType())}> ${this.generateExtractMethod($schema, $field)}() {
     if (getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) {
       return null;
     }
@@ -172,7 +232,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return java.util.Collections.unmodifiableList(itemList);
   }
 #elseif (${this.isEnum($field.schema())})
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  private ${this.javaType($field.schema())} ${this.generateExtractMethod($schema, $field)}() {
     if (${this.generateIsNotNullMethod($schema, $field)}()) {
       try {
         return ${this.javaType($field.schema())}.valueOf(getJSONObject().optString("${this.mangle($field.name(), $schema.isError())}"));
@@ -184,7 +244,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return null;
   }
 #elseif (${this.isRecord($field.schema())})
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  private ${this.javaType($field.schema())} ${this.generateExtractMethod($schema, $field)}() {
     org.json.JSONObject jsonObj = getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)});
     if (jsonObj != null) {
       return new ${this.javaType($field.schema())}(getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}"${this.jsonFallback($field)}));
@@ -192,13 +252,13 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     return null;
   }
 #elseif (${this.isMap($field.schema())})
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  private ${this.javaType($field.schema())} ${this.generateExtractMethod($schema, $field)}() {
     if (getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) return null;
     org.json.JSONObject object = getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}");
     return ${this.getBasePackage()}.JsonHelper.toMap(object);
   }
 #else
-  public ${this.javaType($field.schema())} ${this.generateGetMethod($schema, $field)}() {
+  private ${this.javaType($field.schema())} ${this.generateExtractMethod($schema, $field)}() {
     return getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}") ? null :
       getJSONObject().${this.jsonAccessor($field.schema())}("${this.mangle($field.name(), $schema.isError())}");
   }
@@ -209,7 +269,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #foreach ($field in $schema.getFields())
   /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field is set and is not null */
   public boolean ${this.generateIsNotNullMethod($schema, $field)}() {
-    return !getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}");
+    return cacheValueIsNotNull(CacheKey.${this.mangle($field.name(), $schema.isError())});
   }
 
 #if (${this.isArray($field.schema())} || ${this.isMap($field.schema())})
@@ -224,7 +284,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #foreach ($field in $schema.getFields())
   /** Checks whether the '${this.mangle($field.name(), $schema.isError())}' field has been set, however the value could be null */
   public boolean ${this.generateHasMethod($schema, $field)}() {
-    return getJSONObject().has("${this.mangle($field.name(), $schema.isError())}");
+    return cacheHasKey(CacheKey.${this.mangle($field.name(), $schema.isError())});
   }
 
 #end
@@ -248,6 +308,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #if (${this.isArray($field.schema())})
       if (${this.mangle($field.name(), $schema.isError())} == null) {
         getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", org.json.JSONObject.NULL);
+        cachePutValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
         return this;
       }
 
@@ -277,6 +338,8 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
     } catch (org.json.JSONException e) {
       throw new java.lang.IllegalArgumentException(e);
     }
+
+    cachePutValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
     return this;
   }
 
@@ -286,8 +349,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #foreach ($field in $schema.getFields())
   /** Clears the '${this.mangle($field.name(), $schema.isError())}' field, the 'has' method for this field will now return false */
   public void ${this.generateClearMethod($schema, $field)}() {
-    unlogChange("${this.mangle($field.name(), $schema.isError())}");
-    getJSONObject().remove("${this.mangle($field.name(), $schema.isError())}");
+    cacheRemoveValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
   }
 
 #end

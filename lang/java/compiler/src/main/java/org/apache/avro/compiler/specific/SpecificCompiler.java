@@ -666,6 +666,10 @@ public class SpecificCompiler {
     return generateMethodName(schema, field, "isNotEmpty");
   }
 
+  public static String generateExtractMethod(Schema schema, Field field) {
+    return generateMethodName(schema, field, "extract");
+  }
+
   /**
    * Generates the name of a field "clear" method.
    * @param schema the schema in which the field is defined.
