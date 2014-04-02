@@ -233,7 +233,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   }
 #elseif (${this.isEnum($field.schema())})
   private ${this.javaType($field.schema())} ${this.generateExtractMethod($schema, $field)}() {
-    if (${this.generateIsNotNullMethod($schema, $field)}()) {
+    if (!getJSONObject().isNull("${this.mangle($field.name(), $schema.isError())}")) {
       try {
         return ${this.javaType($field.schema())}.valueOf(getJSONObject().optString("${this.mangle($field.name(), $schema.isError())}"));
       } catch(Exception e) {
