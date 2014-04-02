@@ -54,7 +54,11 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
   private android.os.Bundle bundle = null;
   private android.os.Bundle changeLog = null;
   private Object[] cache = null;
-  private boolean[] cacheHasMapping = null;
+  private byte[] cacheState = null;
+
+  private static final byte STATE_NOT_CACHED = 0;
+  private static final byte STATE_CACHED_NO_VALUE = 1;
+  private static final byte STATE_CACHED_VALUE = 2;
 
   /**
    * Constructs a new empty instance.
@@ -86,48 +90,53 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #end
 
   private <T> T cacheGet(CacheKey key) {
-    populateCache();
-    return (T) cache[key.ordinal()];
+    int index = key.ordinal();
+    populateCache(index);
+    return (T) cache[index];
   }
 
   private boolean cacheValueIsNotNull(CacheKey key) {
-    populateCache();
-    return cache[key.ordinal()] != null;
+    int index = key.ordinal();
+    populateCache(index);
+    return cache[index] != null;
   }
 
   private boolean cacheHasKey(CacheKey key) {
-    populateCache();
-    return cacheHasMapping[key.ordinal()];
-  }
-
-  private void cachePutValue(CacheKey key) {
-    populateCache();
     int index = key.ordinal();
-    cache[index] = key.extractValue(this);
-    cacheHasMapping[index] = true;
+    populateCache(index);
+    return cacheState[index] == STATE_CACHED_VALUE;
   }
 
   private void cacheRemoveValue(CacheKey key) {
-    populateCache();
     int index = key.ordinal();
+    populateCache(index);
     cache[index] = null;
-    cacheHasMapping[index] = false;
+    cacheState[index] = STATE_CACHED_NO_VALUE;
   }
 
-  private void populateCache() {
+  private void cacheMarkDirty(CacheKey key) {
+    if (cache != null) {
+      int index = key.ordinal();
+      cache[index] = null;
+      cacheState[index] = STATE_NOT_CACHED;
+    }
+  }
+
+  private void populateCache(int index) {
     if (cache == null) {
       int size = CacheKey.values().length;
       cache = new Object[size];
-      cacheHasMapping = new boolean[size];
+      cacheState = new byte[size];
+    }
 
-      java.util.Iterator<String> jsonKeyIterator = getJSONObject().keys();
-      while (jsonKeyIterator.hasNext()) {
-        String jsonKeyString = jsonKeyIterator.next();
-        try {
-          cachePutValue(CacheKey.valueOf(jsonKeyString));
-        } catch (IllegalArgumentException e) {
-          // Ignore unknown json key string
-        }
+    if (cacheState[index] == STATE_NOT_CACHED) {
+      CacheKey key = CacheKey.values()[index];
+
+      if (getJSONObject().has(key.name())) {
+        cache[index] = key.extractValue(this);
+        cacheState[index] = STATE_CACHED_VALUE;
+      } else {
+        cacheState[index] = STATE_CACHED_NO_VALUE;
       }
     }
   }
@@ -308,7 +317,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #if (${this.isArray($field.schema())})
       if (${this.mangle($field.name(), $schema.isError())} == null) {
         getJSONObject().put("${this.mangle($field.name(), $schema.isError())}", org.json.JSONObject.NULL);
-        cachePutValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
+        cacheMarkDirty(CacheKey.${this.mangle($field.name(), $schema.isError())});
         return this;
       }
 
@@ -339,7 +348,7 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
       throw new java.lang.IllegalArgumentException(e);
     }
 
-    cachePutValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
+    cacheMarkDirty(CacheKey.${this.mangle($field.name(), $schema.isError())});
     return this;
   }
 
@@ -349,6 +358,8 @@ public final class ${this.mangle($schema.getName())} implements android.os.Parce
 #foreach ($field in $schema.getFields())
   /** Clears the '${this.mangle($field.name(), $schema.isError())}' field, the 'has' method for this field will now return false */
   public void ${this.generateClearMethod($schema, $field)}() {
+    unlogChange("${this.mangle($field.name(), $schema.isError())}");
+    getJSONObject().remove("${this.mangle($field.name(), $schema.isError())}");
     cacheRemoveValue(CacheKey.${this.mangle($field.name(), $schema.isError())});
   }
 
